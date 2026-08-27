@@ -4,9 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Aélythèque</title>
+<link rel="icon" type="image/png" href="simone-icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 <style>
   :root {
     --cream:      #F5F1EE;
@@ -18,7 +19,8 @@
     --text:       #26313F;
     --text-muted: #7A7068;
   }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
     margin: 0;
     min-height: 100vh;
@@ -26,80 +28,150 @@
     font-family: 'DM Sans', sans-serif;
     color: var(--text);
   }
+
+  /* ── En-tête ─────────────────────────────────────────────────── */
   header {
-    background: var(--navy);
-    padding: 28px 24px 24px;
+    padding: 56px 24px 8px;
     text-align: center;
   }
   header .wordmark {
     font-family: 'Playfair Display', serif;
     font-weight: 600;
-    font-size: 1.6rem;
-    color: var(--gold-light);
-    letter-spacing: 1px;
+    font-size: clamp(1.9rem, 5vw, 2.4rem);
+    color: var(--navy);
+    letter-spacing: 0.3px;
+  }
+  header .rule {
+    width: 40px;
+    height: 2px;
+    background: var(--gold-light);
+    margin: 14px auto;
+    border-radius: 2px;
   }
   header p {
-    margin: 6px 0 0;
-    color: rgba(245,241,238,0.75);
-    font-size: 0.85rem;
-  }
-  main {
-    max-width: 880px;
     margin: 0 auto;
-    padding: 40px 24px 60px;
+    max-width: 380px;
+    color: var(--text-muted);
+    font-size: 0.86rem;
+    line-height: 1.4;
+  }
+
+  /* ── Barre de recherche (filtre local, optionnelle) ─────────── */
+  .search-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 28px 24px 4px;
+  }
+  #search {
+    width: 100%;
+    max-width: 320px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--sand);
+    background: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.86rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  #search:focus { border-color: var(--gold-light); box-shadow: 0 0 0 3px rgba(200,160,74,0.15); }
+  #search::placeholder { color: var(--text-muted); }
+
+  /* ── Grille de tuiles, façon écran d'accueil ────────────────── */
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 28px 24px 70px;
   }
   .grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    gap: 28px 20px;
+    justify-items: center;
   }
-  .tool-card {
+  .tool {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
-    width: 160px;
-    height: 160px;
-    background: var(--white);
-    border: 1px solid var(--sand);
-    border-radius: 16px;
+    gap: 8px;
+    width: 100%;
+    max-width: 104px;
     text-decoration: none;
-    color: var(--text);
-    padding: 16px;
-    text-align: center;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-    box-shadow: 0 1px 2px rgba(17,32,51,0.04);
+    color: inherit;
+    opacity: 0;
+    animation: rise 0.45s cubic-bezier(.2,.8,.2,1) forwards;
+    animation-delay: var(--d, 0ms);
   }
-  .tool-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(17,32,51,0.12);
-    border-color: var(--gold-light);
+  @media (prefers-reduced-motion: reduce) {
+    .tool { opacity: 1; animation: none; }
   }
-  .tool-card .icon { font-size: 2.1rem; line-height: 1; }
-  .tool-card .name {
-    font-family: 'Playfair Display', serif;
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .tool-icon {
+    width: 84px;
+    height: 84px;
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.1rem;
+    background: var(--tile-bg, linear-gradient(155deg, #223354, #0d1a2e));
+    box-shadow:
+      0 1px 2px rgba(17,32,51,0.10),
+      0 6px 16px rgba(17,32,51,0.10);
+    transition: transform 0.18s cubic-bezier(.2,.8,.2,1), box-shadow 0.18s ease;
+    overflow: hidden;
+    position: relative;
+  }
+  .tool-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .tool:hover .tool-icon {
+    transform: translateY(-3px) scale(1.045);
+    box-shadow:
+      0 2px 4px rgba(17,32,51,0.12),
+      0 14px 28px rgba(17,32,51,0.18);
+  }
+  .tool:active .tool-icon {
+    transform: scale(0.94);
+    transition-duration: 0.08s;
+  }
+  .tool-name {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'DM Sans', sans-serif;
+    font-size: 0.78rem;
     font-weight: 600;
-    font-size: 1rem;
     color: var(--navy);
+    text-align: center;
+    line-height: 1.25;
+    max-width: 100px;
   }
-  .tool-card .desc {
-    font-size: 0.74rem;
+  .tool-desc {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'DM Sans', sans-serif;
+    font-size: 0.66rem;
     color: var(--text-muted);
-    line-height: 1.3;
+    text-align: center;
+    line-height: 1.25;
+    max-width: 104px;
   }
+
   .empty {
     text-align: center;
     color: var(--text-muted);
-    font-size: 0.9rem;
-    max-width: 420px;
-    margin: 0 auto;
+    font-size: 0.88rem;
+    max-width: 380px;
+    margin: 40px auto 0;
+    line-height: 1.5;
   }
+
   footer {
     text-align: center;
-    padding: 20px;
-    font-size: 0.72rem;
+    padding: 10px 20px 28px;
+    font-size: 0.7rem;
     color: var(--text-muted);
   }
 </style>
@@ -107,58 +179,136 @@
 <body>
 
 <header>
-  <div class="wordmark">AÉLYTHÈQUE</div>
-  <p>Tous les outils internes Aélys, au même endroit</p>
+  <div class="wordmark">Aélythèque</div>
+  <div class="rule"></div>
+  <p>Tous les outils internes Aélys, au même endroit.</p>
 </header>
+
+<div class="search-wrap">
+  <input id="search" type="text" placeholder="Rechercher un outil…" autocomplete="off" />
+</div>
 
 <main>
   <div id="grid" class="grid"></div>
-  <p id="emptyMsg" class="empty" style="display:none;">
-    Aucun outil pour l’instant. Ajoutez-en un dans la liste TOOLS en haut du fichier index.html.
-  </p>
+  <p id="emptyMsg" class="empty" style="display:none;"></p>
 </main>
 
 <footer>Aélys Bijouterie — Nouvelle-Aquitaine</footer>
 
 <script>
-  // ─────────────────────────────────────────────────────────────────
-  // Pour ajouter un nouvel outil : dupliquez une ligne ci-dessous et
-  // changez juste name / desc / icon / url. Rien d'autre à toucher.
-  // "icon" peut être n'importe quel emoji (📚 📦 🧾 📅 ...).
-  // Puis : GitHub → ce fichier → crayon ✏️ → coller → Commit changes.
-  // Vercel redéploie automatiquement en moins d'une minute.
-  // ─────────────────────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════
+  //  LISTE DES OUTILS — c'est la SEULE chose à modifier.
+  //
+  //  Pour ajouter / modifier un outil : dupliquez un bloc { ... },
+  //  changez les valeurs, Commit sur GitHub. Vercel republie tout
+  //  seul en moins d'une minute.
+  //
+  //  Champs de chaque outil :
+  //    name  : nom affiché sous l'icône (obligatoire)
+  //    desc  : petite description, 1 ligne courte (facultatif — mettre "")
+  //    url   : lien vers l'outil (obligatoire)
+  //    icon  : UN SEUL emoji, ex. "📚" (facultatif si "image" est rempli)
+  //    image : lien vers un vrai logo/icône (PNG/JPG carré, ex. 200x200px)
+  //            — si rempli, remplace l'emoji. Sinon laisser ""
+  //    color : couleur de fond de la tuile, un code hexadécimal
+  //            ex. "#A87B27" — facultatif, une couleur neutre est
+  //            utilisée si vous ne mettez rien
+  // ═══════════════════════════════════════════════════════════════
   const TOOLS = [
     {
-      name: "Aurel'IA",
-      desc: "Bibliothèque de procédures & assistant magasin",
-      icon: "📚",
-      url: "https://chatbot-aelys-relays.vercel.app/"
+      name:  "Aurel'IA",
+      desc:  "Bibliothèque de procédures",
+      url:   "https://chatbot-alpha-sepia-22.vercel.app/",
+      icon:  "📚",
+      image: "aurel-ia-icon.png",
+      color: "#A87B27"
+    },
+    {
+      name:  "SIMONE",
+      desc:  "Recherche de références SIMONE A BORDEAUX",
+      url:   "https://recherche-reference-simone.netlify.app/",
+      icon:  "🔍",
+      image: "simone-icon.png",
+      color: "#A87B27"
     },
     // {
-    //   name: "Nom de l'outil",
-    //   desc: "Description courte",
-    //   icon: "🔧",
-    //   url: "https://mon-outil.vercel.app/"
+    //   name:  "Nom de l'outil",
+    //   desc:  "Description courte",
+    //   url:   "https://mon-outil.vercel.app/",
+    //   icon:  "🔧",
+    //   image: "",
+    //   color: "#3B6E8F"
     // },
   ];
+
+  // ── Rendu — pas besoin de toucher à ce qui suit ─────────────────
 
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  const grid = document.getElementById('grid');
-  if (TOOLS.length === 0) {
-    document.getElementById('emptyMsg').style.display = 'block';
-  } else {
-    grid.innerHTML = TOOLS.map(t => `
-      <a class="tool-card" href="${escapeHtml(t.url)}">
-        <div class="icon">${escapeHtml(t.icon || '🔗')}</div>
-        <div class="name">${escapeHtml(t.name)}</div>
-        <div class="desc">${escapeHtml(t.desc || '')}</div>
-      </a>
-    `).join('');
+  // Assombrit une couleur hex pour créer un dégradé à partir d'une
+  // seule couleur fournie (ex. "#A87B27" -> dégradé #A87B27 -> #6E501A)
+  function shade(hex, amount) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+    if (!m) return null;
+    const num = parseInt(m[1], 16);
+    let r = (num >> 16) & 255, g = (num >> 8) & 255, b = num & 255;
+    r = Math.max(0, Math.min(255, Math.round(r * amount)));
+    g = Math.max(0, Math.min(255, Math.round(g * amount)));
+    b = Math.max(0, Math.min(255, Math.round(b * amount)));
+    return `#${[r,g,b].map(x => x.toString(16).padStart(2,'0')).join('')}`;
   }
+
+  function tileBackground(color) {
+    if (!color) return null;
+    const dark = shade(color, 0.62) || color;
+    return `linear-gradient(155deg, ${escapeHtml(color)}, ${escapeHtml(dark)})`;
+  }
+
+  function renderGrid(list) {
+    const grid = document.getElementById('grid');
+    const emptyMsg = document.getElementById('emptyMsg');
+
+    if (TOOLS.length === 0) {
+      grid.innerHTML = '';
+      emptyMsg.textContent = 'Aucun outil pour l’instant. Ajoutez-en un dans la liste TOOLS en haut du fichier index.html.';
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    if (list.length === 0) {
+      grid.innerHTML = '';
+      emptyMsg.textContent = 'Aucun outil ne correspond à cette recherche.';
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+
+    grid.innerHTML = list.map((t, i) => {
+      const bg = tileBackground(t.color);
+      const style = bg ? ` style="--tile-bg:${escapeHtml(bg)}; --d:${i * 45}ms"` : ` style="--d:${i * 45}ms"`;
+      const iconInner = t.image
+        ? `<img src="${escapeHtml(t.image)}" alt="" loading="lazy" />`
+        : escapeHtml(t.icon || '🔗');
+      const desc = t.desc ? `<div class="tool-desc">${escapeHtml(t.desc)}</div>` : '';
+      return `
+        <a class="tool" href="${escapeHtml(t.url)}"${style}>
+          <div class="tool-icon">${iconInner}</div>
+          <div class="tool-name">${escapeHtml(t.name)}</div>
+          ${desc}
+        </a>`;
+    }).join('');
+  }
+
+  renderGrid(TOOLS);
+
+  document.getElementById('search').addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    const filtered = !q ? TOOLS : TOOLS.filter(t =>
+      (t.name || '').toLowerCase().includes(q) || (t.desc || '').toLowerCase().includes(q)
+    );
+    renderGrid(filtered);
+  });
 </script>
 
 </body>
