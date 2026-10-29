@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Aélythèque · Administration</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #F5F1EE; --sand: #EFE8E0; --gold: #A87B27; --gold-light: #C9A04A;
+    --navy: #112033; --white: #FFFFFF; --text: #26313F; --text-muted: #7A7068;
+    --ok: #2F7D4F; --warn: #A87B27; --off: #7A7068; --danger: #B3402F;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; min-height: 100vh; background: var(--cream); color: var(--text);
+         font-family: 'DM Sans', sans-serif; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+         padding: 18px 20px; max-width: 760px; margin: 0 auto; }
+  .wordmark { font-family: 'Playfair Display', serif; font-weight: 600; font-size: 1.3rem; color: var(--navy); }
+  .wordmark small { font-family: 'DM Sans', sans-serif; font-weight: 400; font-size: 0.8rem; color: var(--text-muted); margin-left: 6px; }
+  main { max-width: 760px; margin: 0 auto; padding: 8px 20px 60px; }
+
+  .btn { font: 500 0.84rem 'DM Sans', sans-serif; border: 1px solid var(--sand); background: var(--white);
+         color: var(--navy); padding: 9px 14px; border-radius: 10px; cursor: pointer; text-decoration: none;
+         transition: border-color .15s, background .15s; }
+  .btn:hover { border-color: var(--gold-light); }
+  .btn.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .btn.primary:hover { background: #1b3350; }
+  .btn.danger { color: var(--danger); }
+  .btn.sm { padding: 6px 10px; font-size: 0.76rem; border-radius: 8px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
+
+  .card { background: var(--white); border: 1px solid var(--sand); border-radius: 16px; padding: 24px;
+          box-shadow: 0 1px 2px rgba(17,32,51,.04), 0 8px 24px rgba(17,32,51,.06); }
+  #login { max-width: 360px; margin: 40px auto 0; }
+  #login h1 { font-family: 'Playfair Display', serif; font-size: 1.4rem; margin: 0 0 4px; color: var(--navy); }
+  #login p { margin: 0 0 18px; color: var(--text-muted); font-size: .85rem; }
+
+  label { display: block; font-size: .76rem; font-weight: 500; color: var(--text-muted); margin: 14px 0 5px; }
+  input[type=text], input[type=email], input[type=password], input[type=url], input[type=datetime-local] {
+    width: 100%; font: 400 .9rem 'DM Sans', sans-serif; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid var(--sand); background: var(--cream); color: var(--text); }
+  input[type=color] { width: 44px; height: 38px; padding: 2px; border: 1px solid var(--sand); border-radius: 10px; background: var(--cream); }
+  .msg { font-size: .8rem; margin-top: 12px; min-height: 1.2em; color: var(--danger); }
+
+  .bar { display: flex; align-items: center; justify-content: space-between; margin: 10px 0 14px; }
+  .bar h2 { margin: 0; font-family: 'Playfair Display', serif; font-size: 1.15rem; color: var(--navy); }
+
+  .row { display: flex; align-items: center; gap: 14px; padding: 12px; background: var(--white);
+         border: 1px solid var(--sand); border-radius: 14px; margin-bottom: 10px; }
+  .row.off { opacity: .6; }
+  .thumb { flex: none; width: 52px; height: 52px; border-radius: 14px; overflow: hidden; display: flex;
+           align-items: center; justify-content: center; font-size: 1.4rem; background: #223354;
+           box-shadow: 0 1px 2px rgba(17,32,51,.12); }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .info { flex: 1; min-width: 0; }
+  .info b { display: block; font-size: .92rem; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .info span.u { display: block; font-size: .72rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .badge { display: inline-block; margin-top: 4px; font-size: .68rem; font-weight: 500; padding: 2px 8px; border-radius: 99px; }
+  .badge.ok { background: #E4F2E9; color: var(--ok); }
+  .badge.warn { background: #F6ECD6; color: var(--warn); }
+  .badge.off { background: #ECE7E1; color: var(--off); }
+  .actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; max-width: 270px; }
+
+  dialog { border: none; border-radius: 18px; padding: 0; width: min(520px, calc(100vw - 24px)); color: var(--text);
+           box-shadow: 0 20px 60px rgba(17,32,51,.3); }
+  dialog::backdrop { background: rgba(17,32,51,.45); }
+  dialog form { padding: 22px 24px 20px; }
+  dialog h3 { margin: 0 0 4px; font-family: 'Playfair Display', serif; color: var(--navy); font-size: 1.2rem; }
+  .two { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
+  .three { display: grid; grid-template-columns: 90px 1fr; gap: 12px; align-items: end; }
+  .radios { display: flex; gap: 8px; margin-top: 4px; }
+  .radios label { flex: 1; margin: 0; padding: 10px 12px; border: 1px solid var(--sand); border-radius: 10px; cursor: pointer;
+                  font-size: .84rem; color: var(--text); display: flex; align-items: center; gap: 8px; background: var(--cream); }
+  .radios input { accent-color: var(--gold); }
+  .radios label:has(input:checked) { border-color: var(--gold-light); background: #FBF5E8; }
+  .hint { font-size: .72rem; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+  .foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+  .prevwrap { display: flex; align-items: center; gap: 12px; }
+
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--navy);
+           color: #fff; padding: 10px 16px; border-radius: 10px; font-size: .84rem; opacity: 0; pointer-events: none;
+           transition: opacity .2s, transform .2s; max-width: calc(100vw - 32px); }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .empty { text-align: center; color: var(--text-muted); padding: 30px 10px; font-size: .88rem; }
+
+  @media (max-width: 560px) {
+    .row { flex-wrap: wrap; }
+    .actions { max-width: none; justify-content: flex-start; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wordmark">Aélythèque<small>administration</small></div>
+  <div style="display:flex; gap:8px">
+    <a class="btn sm" href="index.html">Voir le site</a>
+    <button class="btn sm" id="logout" hidden>Déconnexion</button>
+  </div>
+</div>
+
+<main>
+  <section id="login" class="card" hidden>
+    <h1>Connexion</h1>
+    <p>Espace réservé à l’administrateur.</p>
+    <form id="loginForm">
+      <label for="email">E-mail</label>
+      <input id="email" type="email" autocomplete="username" required />
+      <label for="password">Mot de passe</label>
+      <input id="password" type="password" autocomplete="current-password" required />
+      <div class="msg" id="loginMsg" role="alert"></div>
+      <button class="btn primary" type="submit" style="width:100%; margin-top:8px">Se connecter</button>
+    </form>
+  </section>
+
+  <section id="app" hidden>
+    <div class="bar">
+      <h2>Outils</h2>
+      <button class="btn primary" id="addBtn">+ Ajouter un outil</button>
+    </div>
+    <div id="list"></div>
+  </section>
+
+  <p id="fatal" class="msg" style="display:none"></p>
+</main>
+
+<dialog id="dlg">
+  <form id="toolForm">
+    <h3 id="dlgTitle">Ajouter un outil</h3>
+
+    <label for="f_name">Nom</label>
+    <input id="f_name" type="text" maxlength="40" required />
+
+    <label for="f_descr">Description courte</label>
+    <input id="f_descr" type="text" maxlength="80" />
+
+    <label for="f_url">Lien de l’outil</label>
+    <input id="f_url" type="url" placeholder="https://…" required />
+
+    <div class="three">
+      <div><label for="f_icon">Emoji</label><input id="f_icon" type="text" maxlength="4" placeholder="🔧" /></div>
+      <div></div>
+    </div>
+
+    <label for="f_file">Favicon / icône (image carrée)</label>
+    <div class="prevwrap">
+      <div class="thumb" id="f_prev"></div>
+      <input id="f_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,image/x-icon" />
+    </div>
+    <input id="f_image" type="text" placeholder="ou lien d’image (facultatif)" style="margin-top:8px; width:100%; font:400 .84rem 'DM Sans',sans-serif; padding:9px 12px; border-radius:10px; border:1px solid var(--sand); background:var(--cream);" />
+
+    <label for="f_color">Couleur de fond de la tuile</label>
+    <input id="f_color" type="color" value="#A87B27" />
+
+    <label>Mise en ligne</label>
+    <div class="radios">
+      <label><input type="radio" name="mode" value="now" checked /> Tout de suite</label>
+      <label><input type="radio" name="mode" value="later" /> Programmée</label>
+    </div>
+    <div id="laterBox" hidden>
+      <label for="f_when">Date et heure de sortie</label>
+      <input id="f_when" type="datetime-local" />
+      <div class="hint">D’ici là, le public voit une tuile floutée avec un compte à rebours. Le nom, le lien et l’icône réels ne quittent pas la base avant l’heure.</div>
+    </div>
+
+    <div class="msg" id="formMsg" role="alert"></div>
+    <div class="foot">
+      <button type="button" class="btn" id="cancelBtn">Annuler</button>
+      <button type="submit" class="btn primary" id="saveBtn">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script>
+(function () {
+  const C = window.AELYS_CONFIG || {};
+  const $ = s => document.querySelector(s);
+  const pad = n => String(n).padStart(2, '0');
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  if (!C.supabaseUrl || !C.supabaseAnonKey || !window.supabase) {
+    const f = $('#fatal');
+    f.style.display = 'block';
+    f.textContent = 'Configuration manquante : renseigne config.js (voir LISEZ-MOI.md, étape 5).';
+    return;
+  }
+  const sb = window.supabase.createClient(C.supabaseUrl, C.supabaseAnonKey);
+
+  let tools = [];
+  let editing = null;
+
+  // ── Utilitaires visuels ─────────────────────────────────────────
+
+  function shade(hex, a) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+    if (!m) return '#0d1a2e';
+    const n = parseInt(m[1], 16), ch = v => Math.max(0, Math.min(255, Math.round(v * a)));
+    return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => ch(v).toString(16).padStart(2, '0')).join('');
+  }
+  const gradient = c => `linear-gradient(155deg, ${c}, ${shade(c, 0.62)})`;
+
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  const toLocalInput = iso => {
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+  function default17h() {
+    const d = new Date(); d.setHours(17, 0, 0, 0);
+    if (d.getTime() < Date.now()) d.setDate(d.getDate() + 1);
+    return toLocalInput(d);
+  }
+  const fmtDate = iso => {
+    const d = new Date(iso);
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} à ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  // ── Images : recadrage carré + mini-aperçu pour l’effet flou ────
+
+  function loadImage(src) {
+    return new Promise((res, rej) => {
+      const im = new Image(); im.crossOrigin = 'anonymous';
+      im.onload = () => res(im); im.onerror = rej; im.src = src;
+    });
+  }
+  function drawCover(ctx, im, size) {
+    const w = im.naturalWidth || im.width, h = im.naturalHeight || im.height, s = Math.min(w, h);
+    ctx.drawImage(im, (w - s) / 2, (h - s) / 2, s, s, 0, 0, size, size);
+  }
+  function squareBlob(im, size) {
+    const c = document.createElement('canvas'); c.width = c.height = size;
+    drawCover(c.getContext('2d'), im, size);
+    return new Promise(res => c.toBlob(res, 'image/png'));
+  }
+  // 16×16 px : trop petit pour être « dé-flouté » en lecture de texte,
+  // mais assez pour garder les couleurs et la silhouette de l’icône.
+  function makeTeaser(im, color, emoji) {
+    const S = 16, c = document.createElement('canvas'); c.width = c.height = S;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, S, S);
+    g.addColorStop(0, color); g.addColorStop(1, shade(color, 0.62));
+    ctx.fillStyle = g; ctx.fillRect(0, 0, S, S);
+    if (im) drawCover(ctx, im, S);
+    else { ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(emoji || '🔗', S / 2, S / 2 + 1); }
+    return c.toDataURL('image/png');
+  }
+
+  function thumbHtml(t) {
+    const inner = t.image ? `<img src="${esc(t.image)}" alt="" />` : esc(t.icon || '🔗');
+    return `<div class="thumb" style="background:${esc(gradient(t.color || '#A87B27'))}">${inner}</div>`;
+  }
+
+  // ── Connexion ───────────────────────────────────────────────────
+
+  function show(which) {
+    $('#login').hidden = which !== 'login';
+    $('#app').hidden = which !== 'app';
+    $('#logout').hidden = which !== 'app';
+  }
+
+  async function boot() {
+    const { data } = await sb.auth.getSession();
+    if (!data.session) return show('login');
+    const { data: ok } = await sb.rpc('is_admin');
+    if (!ok) {
+      await sb.auth.signOut();
+      show('login');
+      $('#loginMsg').textContent = 'Ce compte n’a pas les droits d’administration.';
+      return;
+    }
+    show('app');
+    await refresh();
+  }
+
+  $('#loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#loginMsg'); msg.textContent = '';
+    const { error } = await sb.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#password').value });
+    if (error) { msg.textContent = 'Identifiants incorrects.'; return; }
+    $('#password').value = '';
+    boot();
+  });
+  $('#logout').addEventListener('click', async () => { await sb.auth.signOut(); show('login'); });
+
+  // ── Liste ───────────────────────────────────────────────────────
+
+  async function refresh() {
+    const { data, error } = await sb.from('tools').select('*').order('position').order('created_at');
+    if (error) { toast('Erreur de chargement : ' + error.message); return; }
+    tools = data; render();
+  }
+
+  function status(t) {
+    if (!t.active) return ['off', 'Masqué'];
+    if (t.release_at && new Date(t.release_at).getTime() > Date.now()) return ['warn', 'Programmé · ' + fmtDate(t.release_at)];
+    return ['ok', 'En ligne'];
+  }
+
+  function render() {
+    const list = $('#list');
+    if (!tools.length) { list.innerHTML = '<div class="empty">Aucun outil. Ajoute le premier !</div>'; return; }
+    list.innerHTML = tools.map((t, i) => {
+      const [cls, label] = status(t);
+      const scheduled = cls === 'warn';
+      return `
+      <div class="row${t.active ? '' : ' off'}" data-id="${esc(t.id)}">
+        ${thumbHtml(t)}
+        <div class="info"><b>${esc(t.name)}</b><span class="u">${esc(t.url)}</span><span class="badge ${cls}">${esc(label)}</span></div>
+        <div class="actions">
+          <button class="btn sm" data-a="up" ${i === 0 ? 'disabled' : ''} aria-label="Monter">↑</button>
+          <button class="btn sm" data-a="down" ${i === tools.length - 1 ? 'disabled' : ''} aria-label="Descendre">↓</button>
+          <button class="btn sm" data-a="edit">Modifier</button>
+          ${scheduled ? '<button class="btn sm" data-a="now">Publier maintenant</button>' : ''}
+          <button class="btn sm" data-a="toggle">${t.active ? 'Retirer' : 'Remettre'}</button>
+          <button class="btn sm danger" data-a="del">Supprimer</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  $('#list').addEventListener('click', async e => {
+    const b = e.target.closest('button[data-a]'); if (!b) return;
+    const id = b.closest('.row').dataset.id;
+    const i = tools.findIndex(t => t.id === id), t = tools[i];
+    const a = b.dataset.a;
+    if (a === 'edit') return openForm(t);
+    if (a === 'up' || a === 'down') return move(i, a === 'up' ? -1 : 1);
+    if (a === 'now') { if (!confirm(`Publier « ${t.name} » maintenant ?`)) return; return update(id, { release_at: null }, 'Publié.'); }
+    if (a === 'toggle') return update(id, { active: !t.active }, t.active ? 'Retiré de la page.' : 'Remis en ligne.');
+    if (a === 'del') return remove(t);
+  });
+
+  async function update(id, patch, okMsg) {
+    const { error } = await sb.from('tools').update(patch).eq('id', id);
+    if (error) return toast('Erreur : ' + error.message);
+    toast(okMsg); refresh();
+  }
+
+  async function move(i, dir) {
+    const j = i + dir; if (j < 0 || j >= tools.length) return;
+    const jobs = tools.map((t, k) => {
+      const pos = k === i ? j : k === j ? i : k;
+      return t.position === pos ? null : sb.from('tools').update({ position: pos }).eq('id', t.id);
+    }).filter(Boolean);
+    const res = await Promise.all(jobs);
+    if (res.some(r => r.error)) toast('Erreur lors du déplacement.');
+    refresh();
+  }
+
+  async function remove(t) {
+    if (!confirm(`Supprimer définitivement « ${t.name} » ?\n(Astuce : « Retirer » le masque sans le supprimer.)`)) return;
+    const { error } = await sb.from('tools').delete().eq('id', t.id);
+    if (error) return toast('Erreur : ' + error.message);
+    const m = /\/storage\/v1\/object\/public\/icons\/([^?]+)/.exec(t.image || '');
+    if (m) sb.storage.from('icons').remove([decodeURIComponent(m[1])]);   // nettoyage, sans bloquer
+    toast('Supprimé.'); refresh();
+  }
+
+  // ── Formulaire ajout / modification ─────────────────────────────
+
+  const dlg = $('#dlg'), form = $('#toolForm');
+  const modeVal = () => form.mode.value;
+
+  function syncMode() { $('#laterBox').hidden = modeVal() !== 'later'; }
+  form.querySelectorAll('input[name=mode]').forEach(r => r.addEventListener('change', () => {
+    syncMode();
+    if (modeVal() === 'later' && !$('#f_when').value) $('#f_when').value = default17h();
+  }));
+
+  function previewTile() {
+    const file = $('#f_file').files[0], url = $('#f_image').value.trim();
+    const color = $('#f_color').value, emoji = $('#f_icon').value.trim() || '🔗';
+    const p = $('#f_prev');
+    p.style.background = gradient(color);
+    if (file) p.innerHTML = `<img src="${esc(URL.createObjectURL(file))}" alt="" />`;
+    else if (url) p.innerHTML = `<img src="${esc(url)}" alt="" />`;
+    else p.textContent = emoji;
+  }
+  ['#f_file', '#f_image', '#f_color', '#f_icon'].forEach(s => $(s).addEventListener('input', previewTile));
+
+  function openForm(t) {
+    editing = t || null;
+    form.reset();
+    $('#formMsg').textContent = '';
+    $('#dlgTitle').textContent = t ? 'Modifier l’outil' : 'Ajouter un outil';
+    $('#f_name').value = t ? t.name : '';
+    $('#f_descr').value = t ? t.descr : '';
+    $('#f_url').value = t ? t.url : '';
+    $('#f_icon').value = t ? t.icon : '';
+    $('#f_image').value = t && t.image ? t.image : '';
+    $('#f_color').value = t && /^#[0-9a-f]{6}$/i.test(t.color || '') ? t.color : '#A87B27';
+    const later = t && t.release_at && new Date(t.release_at).getTime() > Date.now();
+    form.mode.value = later ? 'later' : 'now';
+    $('#f_when').value = later ? toLocalInput(t.release_at) : '';
+    syncMode(); previewTile();
+    dlg.showModal();
+  }
+  $('#addBtn').addEventListener('click', () => openForm(null));
+  $('#cancelBtn').addEventListener('click', () => dlg.close());
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#formMsg'), btn = $('#saveBtn'); msg.textContent = '';
+    const name = $('#f_name').value.trim(), url = $('#f_url').value.trim();
+    if (!/^https?:\/\//i.test(url)) { msg.textContent = 'Le lien doit commencer par http:// ou https://'; return; }
+
+    let release_at = null;
+    if (modeVal() === 'later') {
+      const v = $('#f_when').value;
+      if (!v) { msg.textContent = 'Choisis une date et une heure de sortie.'; return; }
+      const d = new Date(v);
+      if (d.getTime() <= Date.now() && !(editing && editing.release_at)) { msg.textContent = 'Cette heure est déjà passée.'; return; }
+      release_at = d.toISOString();
+    }
+
+    btn.disabled = true; btn.textContent = 'Enregistrement…';
+    try {
+      const color = $('#f_color').value, emoji = $('#f_icon').value.trim() || '🔗';
+      let image = $('#f_image').value.trim() || null, im = null;
+      const file = $('#f_file').files[0];
+
+      if (file) {
+        const objUrl = URL.createObjectURL(file);
+        im = await loadImage(objUrl);
+        const blob = await squareBlob(im, 256);
+        const path = `${crypto.randomUUID()}.png`;      // nom aléatoire = non devinable
+        const up = await sb.storage.from('icons').upload(path, blob, { contentType: 'image/png', upsert: false });
+        if (up.error) throw up.error;
+        image = sb.storage.from('icons').getPublicUrl(path).data.publicUrl;
+      } else if (image) {
+        try { im = await loadImage(image); } catch (_) { im = null; }
+      }
+
+      let teaser = (!im && image && editing && editing.teaser) ? editing.teaser : makeTeaser(im, color, emoji);
+
+      const row = { name, descr: $('#f_descr').value.trim(), url, icon: emoji, image, color, teaser, release_at };
+      let res;
+      if (editing) res = await sb.from('tools').update(row).eq('id', editing.id);
+      else {
+        row.position = tools.length ? Math.max(...tools.map(t => t.position)) + 1 : 0;
+        res = await sb.from('tools').insert(row);
+      }
+      if (res.error) throw res.error;
+      dlg.close();
+      toast(editing ? 'Modifications enregistrées.' : (release_at ? 'Outil programmé.' : 'Outil ajouté.'));
+      refresh();
+    } catch (err) {
+      msg.textContent = 'Erreur : ' + (err.message || 'enregistrement impossible.');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Enregistrer';
+    }
+  });
+
+  boot();
+})();
+</script>
+</body>
+</html>

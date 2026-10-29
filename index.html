@@ -59,7 +59,7 @@
     line-height: 1.4;
   }
 
-  /* ── Barre de recherche (filtre local, optionnelle) ─────────── */
+  /* ── Barre de recherche ──────────────────────────────────────── */
   .search-wrap {
     display: flex;
     justify-content: center;
@@ -108,6 +108,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .tool { opacity: 1; animation: none; }
+    .tool.reveal .tool-icon { animation: none; }
   }
   @keyframes rise {
     from { opacity: 0; transform: translateY(10px) scale(0.96); }
@@ -162,6 +163,55 @@
     max-width: 104px;
   }
 
+  /* ── Outil pas encore sorti : aperçu flouté + compte à rebours ── */
+  .tool.locked { cursor: default; }
+  .tool.locked:hover .tool-icon,
+  .tool.locked:active .tool-icon { transform: none; }
+  .tool-icon .teaser {
+    position: absolute;
+    inset: 0;
+    filter: blur(7px) saturate(1.15);
+    transform: scale(1.45);
+  }
+  .lock {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: rgba(17,32,51,0.42);
+    color: #fff;
+    text-align: center;
+    padding: 4px;
+  }
+  .lock .cd {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.2px;
+    line-height: 1.1;
+  }
+  .lock .at {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.54rem;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    opacity: 0.88;
+    line-height: 1.2;
+  }
+  .lock svg { width: 14px; height: 14px; opacity: 0.9; }
+  .blur { filter: blur(5px); user-select: none; pointer-events: none; }
+
+  /* Au moment de la sortie : le flou se dissipe */
+  .tool.reveal .tool-icon { animation: unveil 1s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes unveil {
+    from { filter: blur(10px) brightness(1.2); transform: scale(1.15); }
+    to   { filter: none; transform: scale(1); }
+  }
+
   .empty {
     text-align: center;
     color: var(--text-muted);
@@ -177,6 +227,16 @@
     font-size: 0.7rem;
     color: var(--text-muted);
   }
+  footer .admin-link {
+    display: inline-flex;
+    vertical-align: middle;
+    margin-left: 8px;
+    color: var(--text-muted);
+    opacity: 0.45;
+    transition: opacity 0.15s ease;
+  }
+  footer .admin-link:hover, footer .admin-link:focus-visible { opacity: 1; }
+  footer .admin-link svg { width: 13px; height: 13px; }
 </style>
 </head>
 <body>
@@ -196,94 +256,162 @@
   <p id="emptyMsg" class="empty" style="display:none;"></p>
 </main>
 
-<footer>Aélys Bijouterie</footer>
+<footer>Aélys Bijouterie
+  <a class="admin-link" href="admin.html" aria-label="Administration" title="Administration">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+  </a>
+</footer>
 
+<script src="config.js"></script>
 <script>
   // ═══════════════════════════════════════════════════════════════
-  //  LISTE DES OUTILS — c'est la SEULE chose à modifier.
-  //
-  //  Pour ajouter / modifier un outil : dupliquez un bloc { ... },
-  //  changez les valeurs, Commit sur GitHub. Vercel republie tout
-  //  seul en moins d'une minute.
-  //
-  //  Champs de chaque outil :
-  //    name  : nom affiché sous l'icône (obligatoire)
-  //    desc  : petite description, 1 ligne courte (facultatif — mettre "")
-  //    url   : lien vers l'outil (obligatoire)
-  //    icon  : UN SEUL emoji, ex. "📚" (facultatif si "image" est rempli)
-  //    image : lien vers un vrai logo/icône (PNG/JPG carré, ex. 200x200px)
-  //            — si rempli, remplace l'emoji. Sinon laisser ""
-  //    color : couleur de fond de la tuile, un code hexadécimal
-  //            ex. "#A87B27" — facultatif, une couleur neutre est
-  //            utilisée si vous ne mettez rien
+  //  La liste des outils est maintenant gérée depuis admin.html.
+  //  Cette liste n'est qu'un FILET DE SÉCURITÉ : affichée seulement
+  //  si la base est injoignable et qu'aucune copie n'est en mémoire.
   // ═══════════════════════════════════════════════════════════════
-    const TOOLS = [
-      {
-        name:  "Aurel'IA",
-        desc:  "Bibliothèque de procédures",
-        url:   "https://chatbot-alpha-sepia-22.vercel.app/",
-        icon:  "📚",
-        image: "aureil-ia-icon.jpg",
-        color: "#A87B27"
-      },
-      {
-        name:  "SIMONE",
-        desc:  "Recherche de références SIMONE A BORDEAUX",
-        url:   "https://recherche-reference-simone.netlify.app/",
-        icon:  "🔍",
-        image: "simone-icon.jpg",
-        color: "#A87B27"
-      },
-      {
-        name:  "TEMPO",
-        desc:  "Gestion des visuels opérations magasin",
-        url:   "https://pac-aelys.vercel.app/connexion-boutique",
-        icon:  "🖼️",
-        image: "tempo.jpg",
-        color: "#A87B27"
-      },
-    // {
-    //   name:  "Nom de l'outil",
-    //   desc:  "Description courte",
-    //   url:   "https://mon-outil.vercel.app/",
-    //   icon:  "🔧",
-    //   image: "",
-    //   color: "#3B6E8F"
-    // },
+  const FALLBACK = [
+    { id: 'f1', name: "Aurel'IA", desc: "Bibliothèque de procédures", url: "https://chatbot-alpha-sepia-22.vercel.app/", icon: "📚", image: "aureil-ia-icon.jpg", color: "#A87B27" },
+    { id: 'f2', name: "SIMONE", desc: "Recherche de références SIMONE A BORDEAUX", url: "https://recherche-reference-simone.netlify.app/", icon: "🔍", image: "simone-icon.jpg", color: "#A87B27" },
+    { id: 'f3', name: "TEMPO", desc: "Gestion des visuels opérations magasin", url: "https://pac-aelys.vercel.app/connexion-boutique", icon: "🖼️", image: "tempo.jpg", color: "#A87B27" }
   ];
 
-  // ── Rendu — pas besoin de toucher à ce qui suit ─────────────────
+  const CFG = window.AELYS_CONFIG || {};
+  const CACHE_KEY = 'aelytheque.tools.v1';
+
+  let tools = [];          // outils normalisés
+  let offset = 0;          // décalage horloge serveur - horloge de l'appareil
+  let prevLocked = new Set();
+  let reloading = false;
+
+  // ── Utilitaires ─────────────────────────────────────────────────
 
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  // Assombrit une couleur hex pour créer un dégradé à partir d'une
-  // seule couleur fournie (ex. "#A87B27" -> dégradé #A87B27 -> #6E501A)
+  // Seuls les liens http(s) ou relatifs sont acceptés
+  function safeUrl(u) {
+    if (!u) return '#';
+    return /^(https?:\/\/|\/|\.\/|[\w-]+\.[\w]+$)/i.test(u) ? u : '#';
+  }
+
   function shade(hex, amount) {
     const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
     if (!m) return null;
     const num = parseInt(m[1], 16);
-    let r = (num >> 16) & 255, g = (num >> 8) & 255, b = num & 255;
-    r = Math.max(0, Math.min(255, Math.round(r * amount)));
-    g = Math.max(0, Math.min(255, Math.round(g * amount)));
-    b = Math.max(0, Math.min(255, Math.round(b * amount)));
+    const ch = v => Math.max(0, Math.min(255, Math.round(v * amount)));
+    const r = ch((num >> 16) & 255), g = ch((num >> 8) & 255), b = ch(num & 255);
     return `#${[r,g,b].map(x => x.toString(16).padStart(2,'0')).join('')}`;
   }
 
   function tileBackground(color) {
-    if (!color) return null;
-    const dark = shade(color, 0.62) || color;
-    return `linear-gradient(155deg, ${escapeHtml(color)}, ${escapeHtml(dark)})`;
+    if (!/^#[0-9a-f]{6}$/i.test(color || '')) return null;
+    return `linear-gradient(155deg, ${color}, ${shade(color, 0.62)})`;
   }
 
-  function renderGrid(list) {
+  const nowMs = () => Date.now() + offset;
+  const pad = n => String(n).padStart(2, '0');
+
+  function countdown(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600),
+          m = Math.floor((s % 3600) / 60), x = s % 60;
+    return d > 0 ? `${d}j ${pad(h)}h${pad(m)}` : `${pad(h)}:${pad(m)}:${pad(x)}`;
+  }
+
+  function releaseLabel(ms) {
+    const d = new Date(ms), t = new Date(nowMs());
+    const hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const sameDay = d.toDateString() === t.toDateString();
+    return sameDay ? `dès ${hm}` : `${pad(d.getDate())}/${pad(d.getMonth() + 1)} · ${hm}`;
+  }
+
+  // ── Chargement ──────────────────────────────────────────────────
+
+  function normalize(t) {
+    return {
+      id: t.id, name: t.name, desc: t.descr != null ? t.descr : t.desc,
+      url: t.url, icon: t.icon, image: t.image, color: t.color, teaser: t.teaser,
+      locked: !!t.locked, releaseAt: t.release_at ? new Date(t.release_at).getTime() : null
+    };
+  }
+
+  async function load() {
+    try {
+      if (!CFG.supabaseUrl || !CFG.supabaseAnonKey) throw new Error('config');
+      const r = await fetch(`${CFG.supabaseUrl}/rest/v1/rpc/get_tools`, {
+        method: 'POST',
+        headers: {
+          apikey: CFG.supabaseAnonKey,
+          Authorization: `Bearer ${CFG.supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: '{}'
+      });
+      if (!r.ok) throw new Error('http ' + r.status);
+      const data = await r.json();
+      offset = new Date(data.now).getTime() - Date.now();
+      tools = data.tools.map(normalize);
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+    } catch (e) {
+      let cached = null;
+      try { cached = JSON.parse(localStorage.getItem(CACHE_KEY)); } catch (e2) {}
+      if (cached && cached.tools) {
+        // Copie locale : on ne ré-évalue pas les verrous avec l'horloge de l'appareil
+        offset = new Date(cached.now).getTime() - Date.now();
+        tools = cached.tools.map(normalize);
+      } else {
+        tools = FALLBACK;
+      }
+    }
+  }
+
+  // ── Rendu ───────────────────────────────────────────────────────
+
+  function tileHtml(t, i, reveal) {
+    const bg = tileBackground(t.color);
+    const style = ` style="${bg ? `--tile-bg:${escapeHtml(bg)}; ` : ''}--d:${i * 45}ms"`;
+
+    if (t.locked && t.releaseAt) {
+      const teaser = t.teaser ? `<img class="teaser" src="${escapeHtml(t.teaser)}" alt="" />` : '';
+      return `
+        <div class="tool locked" data-id="${escapeHtml(t.id)}" aria-disabled="true"${style}>
+          <div class="tool-icon">
+            ${teaser}
+            <div class="lock" data-release="${t.releaseAt}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+              <span class="cd">--:--:--</span>
+              <span class="at">${escapeHtml(releaseLabel(t.releaseAt))}</span>
+            </div>
+          </div>
+          <div class="tool-name blur">${escapeHtml(t.name)}</div>
+          <div class="tool-desc blur">${escapeHtml(t.desc)}</div>
+        </div>`;
+    }
+
+    const iconInner = t.image
+      ? `<img src="${escapeHtml(t.image)}" alt="" loading="lazy" />`
+      : escapeHtml(t.icon || '🔗');
+    const desc = t.desc ? `<div class="tool-desc">${escapeHtml(t.desc)}</div>` : '';
+    return `
+      <a class="tool${reveal ? ' reveal' : ''}" href="${escapeHtml(safeUrl(t.url))}"${style}>
+        <div class="tool-icon">${iconInner}</div>
+        <div class="tool-name">${escapeHtml(t.name)}</div>
+        ${desc}
+      </a>`;
+  }
+
+  function renderGrid() {
     const grid = document.getElementById('grid');
     const emptyMsg = document.getElementById('emptyMsg');
+    const q = document.getElementById('search').value.trim().toLowerCase();
 
-    if (TOOLS.length === 0) {
+    const list = !q ? tools : tools.filter(t => !t.locked &&
+      ((t.name || '').toLowerCase().includes(q) || (t.desc || '').toLowerCase().includes(q)));
+
+    if (tools.length === 0) {
       grid.innerHTML = '';
-      emptyMsg.textContent = 'Aucun outil pour l’instant. Ajoutez-en un dans la liste TOOLS en haut du fichier index.html.';
+      emptyMsg.textContent = 'Aucun outil pour l’instant.';
       emptyMsg.style.display = 'block';
       return;
     }
@@ -295,31 +423,43 @@
     }
     emptyMsg.style.display = 'none';
 
-    grid.innerHTML = list.map((t, i) => {
-      const bg = tileBackground(t.color);
-      const style = bg ? ` style="--tile-bg:${escapeHtml(bg)}; --d:${i * 45}ms"` : ` style="--d:${i * 45}ms"`;
-      const iconInner = t.image
-        ? `<img src="${escapeHtml(t.image)}" alt="" loading="lazy" />`
-        : escapeHtml(t.icon || '🔗');
-      const desc = t.desc ? `<div class="tool-desc">${escapeHtml(t.desc)}</div>` : '';
-      return `
-        <a class="tool" href="${escapeHtml(t.url)}"${style}>
-          <div class="tool-icon">${iconInner}</div>
-          <div class="tool-name">${escapeHtml(t.name)}</div>
-          ${desc}
-        </a>`;
-    }).join('');
+    grid.innerHTML = list.map((t, i) => tileHtml(t, i, !t.locked && prevLocked.has(t.id))).join('');
+    prevLocked = new Set(tools.filter(t => t.locked).map(t => t.id));
+    tick();
   }
 
-  renderGrid(TOOLS);
+  // ── Compte à rebours ────────────────────────────────────────────
 
-  document.getElementById('search').addEventListener('input', (e) => {
-    const q = e.target.value.trim().toLowerCase();
-    const filtered = !q ? TOOLS : TOOLS.filter(t =>
-      (t.name || '').toLowerCase().includes(q) || (t.desc || '').toLowerCase().includes(q)
-    );
-    renderGrid(filtered);
-  });
+  function tick() {
+    let expired = false;
+    document.querySelectorAll('.lock[data-release]').forEach(el => {
+      const left = Number(el.dataset.release) - nowMs();
+      el.querySelector('.cd').textContent = countdown(left);
+      if (left <= 0) expired = true;
+    });
+    // L'heure est passée : on redemande la liste au serveur (qui, lui,
+    // décide du déverrouillage). Nouvel essai toutes les 2 s si besoin.
+    if (expired && !reloading) {
+      reloading = true;
+      refresh().finally(() => setTimeout(() => { reloading = false; }, 2000));
+    }
+  }
+
+  async function refresh() {
+    await load();
+    renderGrid();
+  }
+
+  document.getElementById('search').addEventListener('input', renderGrid);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+  setInterval(tick, 1000);
+
+  // Premier affichage : copie locale tout de suite (pas d'écran vide), puis liste à jour
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY));
+    if (c && c.tools) { offset = new Date(c.now).getTime() - Date.now(); tools = c.tools.map(normalize); renderGrid(); }
+  } catch (e) {}
+  refresh();
 </script>
 
 </body>
