@@ -35,6 +35,24 @@
   .wallpaper { position: fixed; inset: 0; z-index: -1; background-color: #cfc6b6;
     background-image: url("wallpaper.jpg");
     background-size: cover; background-position: center; background-repeat: no-repeat; }
+  .wallpaper::after {            /* voile : le visuel passe en fondu derrière les apps */
+    content: ""; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 75% 65% at 50% 42%, rgba(250,246,238,.50), rgba(250,246,238,0) 75%),
+      linear-gradient(180deg, rgba(247,242,233,.30), rgba(247,242,233,.18));
+    -webkit-backdrop-filter: blur(5px) saturate(.9); backdrop-filter: blur(5px) saturate(.9);
+  }
+
+  /* Horloge façon barre de menus macOS */
+  .menuclock {
+    position: fixed; top: 14px; right: 18px; z-index: 5;
+    padding: 6px 14px; border-radius: 999px; font-size: .76rem; font-weight: 500; letter-spacing: .1px;
+    color: var(--ink); text-transform: capitalize; white-space: nowrap;
+    border: 1px solid var(--glass-edge); background: var(--glass);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8); backdrop-filter: blur(24px) saturate(1.8);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 6px 18px rgba(70,52,28,.14);
+    font-variant-numeric: tabular-nums;
+  }
 
   /* ── En-tête ─────────────────────────────────────────────────── */
   header { padding: 60px 24px 6px; text-align: center; }
@@ -50,8 +68,15 @@
 
   /* ── Recherche : pastille de verre liquide ───────────────────── */
   .search-wrap { display: flex; justify-content: center; padding: 30px 24px 4px; }
+  .sbox { position: relative; width: 100%; max-width: 280px;
+    transition: max-width .3s cubic-bezier(.2,.8,.2,1); }
+  .sbox:focus-within { max-width: 360px; }
+  .sbox kbd { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;
+    font: 500 .68rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; color: var(--ink-soft);
+    padding: 2px 7px; border-radius: 6px; background: rgba(255,255,255,.45); border: 1px solid rgba(255,255,255,.7); }
+  .sbox:focus-within kbd { display: none; }
   #search {
-    width: 100%; max-width: 280px;
+    width: 100%;
     padding: 10px 16px 10px 40px;
     border-radius: 999px;
     border: 1px solid var(--glass-edge);
@@ -64,10 +89,10 @@
     font: 400 .9rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'DM Sans', sans-serif;
     color: var(--ink);
     outline: none;
-    transition: max-width .3s cubic-bezier(.2,.8,.2,1), background-color .2s ease, box-shadow .2s ease;
+    transition: background-color .2s ease, box-shadow .2s ease;
   }
   #search::placeholder { color: rgba(47,37,25,.5); }
-  #search:focus { max-width: 360px; box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 0 0 3px rgba(255,255,255,.18), 0 10px 30px rgba(70,52,28,.28); }
+  #search:focus { box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 0 0 3px rgba(255,255,255,.18), 0 10px 30px rgba(70,52,28,.28); }
 
   /* ── Grille Launchpad ────────────────────────────────────────── */
   main { max-width: 860px; margin: 0 auto; padding: 44px 24px 120px; }
@@ -114,7 +139,7 @@
   .tool-icon::after {            /* reflet de verre par-dessus l'icône */
     content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3;
     background:
-      radial-gradient(120% 70% at 25% -10%, rgba(255,255,255,.55), rgba(255,255,255,0) 55%),
+      radial-gradient(120% 75% at var(--mx, 25%) var(--my, -10%), rgba(255,255,255,.6), rgba(255,255,255,0) 58%),
       linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,0) 40%);
     mix-blend-mode: soft-light;
   }
@@ -185,6 +210,7 @@
 <body>
 
 <div class="wallpaper" aria-hidden="true"></div>
+<div class="menuclock" id="clock" aria-hidden="true"></div>
 
 <header>
   <div class="wordmark">Aélythèque</div>
@@ -193,7 +219,10 @@
 </header>
 
 <div class="search-wrap">
-  <input id="search" type="search" placeholder="Rechercher" autocomplete="off" aria-label="Rechercher un outil" />
+  <div class="sbox">
+    <input id="search" type="search" placeholder="Rechercher" autocomplete="off" aria-label="Rechercher un outil" />
+    <kbd>/</kbd>
+  </div>
 </div>
 
 <main>
@@ -395,7 +424,40 @@
     renderGrid();
   }
 
-  document.getElementById('search').addEventListener('input', renderGrid);
+  const searchEl = document.getElementById('search');
+  searchEl.addEventListener('input', renderGrid);
+
+  // « / » ou ⌘K / Ctrl+K : cherche ; Entrée : ouvre le premier résultat ; Échap : efface
+  document.addEventListener('keydown', e => {
+    const typing = /^(input|textarea)$/i.test((e.target.tagName || ''));
+    if ((e.key === '/' && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
+      e.preventDefault(); searchEl.focus(); searchEl.select();
+    }
+  });
+  searchEl.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { searchEl.value = ''; searchEl.blur(); renderGrid(); }
+    if (e.key === 'Enter') {
+      const first = document.querySelector('#grid a.tool');
+      if (first) location.href = first.href;
+    }
+  });
+
+  // Reflet de verre qui suit le pointeur
+  document.getElementById('grid').addEventListener('pointermove', e => {
+    const ic = e.target.closest('.tool-icon'); if (!ic) return;
+    const r = ic.getBoundingClientRect();
+    ic.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(0) + '%');
+    ic.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(0) + '%');
+  });
+
+  // Horloge type barre de menus
+  function updateClock() {
+    const d = new Date();
+    document.getElementById('clock').textContent =
+      d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }).replace('.', '') +
+      '  ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  }
+  updateClock(); setInterval(updateClock, 15000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
   setInterval(tick, 1000);
 
