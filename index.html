@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#cfc6b6" />
 <title>Aélysthèque</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico" />
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
@@ -13,97 +14,75 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --cream:      #F5F1EE;
-    --sand:       #EFE8E0;
-    --gold:       #A87B27;
-    --gold-light: #C9A04A;
-    --navy:       #112033;
-    --white:      #FFFFFF;
-    --text:       #26313F;
-    --text-muted: #7A7068;
+    --ink: #2f2519;
+    --ink-soft: rgba(47,37,25,.62);
+    --glass: rgba(255,255,255,.34);
+    --glass-edge: rgba(255,255,255,.75);
+    --gold-light: #A87B27;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html { -webkit-text-size-adjust: 100%; }
+  html { -webkit-text-size-adjust: 100%; color-scheme: light; }
   body {
     margin: 0;
     min-height: 100vh;
-    background: var(--cream);
-    font-family: 'DM Sans', sans-serif;
-    color: var(--text);
+    background: #cfc6b6;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', 'DM Sans', sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
   }
 
+  /* ── Fond d'écran Apple « champagne » ────────────────────────── */
+  .wallpaper { position: fixed; inset: 0; z-index: -1; background-color: #cfc6b6;
+    background-image: url("wallpaper.jpg");
+    background-size: cover; background-position: center; background-repeat: no-repeat; }
+
   /* ── En-tête ─────────────────────────────────────────────────── */
-  header {
-    padding: 56px 24px 8px;
-    text-align: center;
-  }
+  header { padding: 60px 24px 6px; text-align: center; }
   header .wordmark {
     font-family: 'Playfair Display', serif;
     font-weight: 600;
-    font-size: clamp(1.9rem, 5vw, 2.4rem);
-    color: var(--navy);
-    letter-spacing: 0.3px;
+    font-size: clamp(2rem, 5.5vw, 2.7rem);
+    letter-spacing: .3px;
+    text-shadow: 0 2px 24px rgba(255,255,255,.5);
   }
-  header .rule {
-    width: 40px;
-    height: 2px;
-    background: var(--gold-light);
-    margin: 14px auto;
-    border-radius: 2px;
-  }
-  header p {
-    margin: 0 auto;
-    max-width: 380px;
-    color: var(--text-muted);
-    font-size: 0.86rem;
-    line-height: 1.4;
-  }
+  header .rule { width: 40px; height: 2px; background: var(--gold-light); margin: 14px auto; border-radius: 2px; opacity: .9; }
+  header p { margin: 0 auto; max-width: 380px; color: var(--ink-soft); font-size: .88rem; line-height: 1.4; }
 
-  /* ── Barre de recherche ──────────────────────────────────────── */
-  .search-wrap {
-    display: flex;
-    justify-content: center;
-    padding: 28px 24px 4px;
-  }
+  /* ── Recherche : pastille de verre liquide ───────────────────── */
+  .search-wrap { display: flex; justify-content: center; padding: 30px 24px 4px; }
   #search {
-    width: 100%;
-    max-width: 320px;
-    padding: 10px 16px;
-    border-radius: 12px;
-    border: 1px solid var(--sand);
-    background: var(--white);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.86rem;
-    color: var(--text);
+    width: 100%; max-width: 280px;
+    padding: 10px 16px 10px 40px;
+    border-radius: 999px;
+    border: 1px solid var(--glass-edge);
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f2519' stroke-opacity='.6' stroke-width='2.2' stroke-linecap='round'><circle cx='11' cy='11' r='7'/><path d='m20 20-3.5-3.5'/></svg>") no-repeat 15px 50% / 16px,
+      var(--glass);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8);
+            backdrop-filter: blur(24px) saturate(1.8);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.38), inset 0 -1px 0 rgba(255,255,255,.06), 0 8px 24px rgba(70,52,28,.22);
+    font: 400 .9rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'DM Sans', sans-serif;
+    color: var(--ink);
     outline: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: max-width .3s cubic-bezier(.2,.8,.2,1), background-color .2s ease, box-shadow .2s ease;
   }
-  #search:focus { border-color: var(--gold-light); box-shadow: 0 0 0 3px rgba(200,160,74,0.15); }
-  #search::placeholder { color: var(--text-muted); }
+  #search::placeholder { color: rgba(47,37,25,.5); }
+  #search:focus { max-width: 360px; box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 0 0 3px rgba(255,255,255,.18), 0 10px 30px rgba(70,52,28,.28); }
 
-  /* ── Grille de tuiles, façon écran d'accueil ────────────────── */
-  main {
-    max-width: 640px;
-    margin: 0 auto;
-    padding: 28px 24px 70px;
-  }
+  /* ── Grille Launchpad ────────────────────────────────────────── */
+  main { max-width: 860px; margin: 0 auto; padding: 44px 24px 120px; }
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
-    gap: 28px 20px;
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: 40px 14px;
     justify-items: center;
   }
   .tool {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    max-width: 104px;
-    text-decoration: none;
-    color: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 9px;
+    width: 100%; max-width: 112px;
+    text-decoration: none; color: inherit;
     opacity: 0;
-    animation: rise 0.45s cubic-bezier(.2,.8,.2,1) forwards;
+    animation: rise .55s cubic-bezier(.2,.8,.2,1) forwards;
     animation-delay: var(--d, 0ms);
   }
   @media (prefers-reduced-motion: reduce) {
@@ -111,135 +90,101 @@
     .tool.reveal .tool-icon { animation: none; }
   }
   @keyframes rise {
-    from { opacity: 0; transform: translateY(10px) scale(0.96); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
+    from { opacity: 0; transform: translateY(14px) scale(.94); }
+    to   { opacity: 1; transform: none; }
   }
+
+  /* Icône « liquid glass » : teinte + reflet spéculaire + bord lumineux */
   .tool-icon {
-    width: 84px;
-    height: 84px;
-    border-radius: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.1rem;
-    background: var(--tile-bg, linear-gradient(155deg, #223354, #0d1a2e));
+    width: 94px; height: 94px;
+    border-radius: 27px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.4rem;
+    background: var(--tile-bg, linear-gradient(155deg, #4a6fa8, #1b2f55));
+    position: relative; overflow: hidden;
     box-shadow:
-      0 1px 2px rgba(17,32,51,0.10),
-      0 6px 16px rgba(17,32,51,0.10);
-    transition: transform 0.18s cubic-bezier(.2,.8,.2,1), box-shadow 0.18s ease;
-    overflow: hidden;
-    position: relative;
+      0 14px 30px rgba(70,52,28,.38),
+      0 2px 6px rgba(70,52,28,.28),
+      inset 0 0 0 1px rgba(255,255,255,.26),
+      inset 0 1.5px 1px rgba(255,255,255,.6),
+      inset 0 -12px 20px rgba(255,255,255,.07);
+    transition: transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease;
   }
-  .tool-icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .tool-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tool-icon::after {            /* reflet de verre par-dessus l'icône */
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3;
+    background:
+      radial-gradient(120% 70% at 25% -10%, rgba(255,255,255,.55), rgba(255,255,255,0) 55%),
+      linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,0) 40%);
+    mix-blend-mode: soft-light;
   }
   .tool:hover .tool-icon {
-    transform: translateY(-3px) scale(1.045);
-    box-shadow:
-      0 2px 4px rgba(17,32,51,0.12),
-      0 14px 28px rgba(17,32,51,0.18);
+    transform: translateY(-4px) scale(1.08);
+    box-shadow: 0 22px 44px rgba(70,52,28,.45), 0 4px 10px rgba(70,52,28,.3),
+      inset 0 0 0 1px rgba(255,255,255,.34), inset 0 1.5px 1px rgba(255,255,255,.7), inset 0 -12px 20px rgba(255,255,255,.1);
   }
-  .tool:active .tool-icon {
-    transform: scale(0.94);
-    transition-duration: 0.08s;
-  }
+  .tool:active .tool-icon { transform: scale(.93); transition-duration: .08s; }
+  .tool:focus-visible .tool-icon { outline: 3px solid rgba(47,37,25,.45); outline-offset: 3px; }
+
   .tool-name {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'DM Sans', sans-serif;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--navy);
-    text-align: center;
-    line-height: 1.25;
-    max-width: 100px;
+    font-size: .8rem; font-weight: 500; text-align: center; line-height: 1.25; max-width: 108px;
+    text-shadow: 0 1px 8px rgba(255,255,255,.55);
   }
   .tool-desc {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'DM Sans', sans-serif;
-    font-size: 0.66rem;
-    color: var(--text-muted);
-    text-align: center;
-    line-height: 1.25;
-    max-width: 104px;
+    font-size: .66rem; color: var(--ink-soft); text-align: center; line-height: 1.25; max-width: 108px;
+    text-shadow: 0 1px 6px rgba(255,255,255,.5); margin-top: -5px;
   }
 
-  /* ── Outil pas encore sorti : aperçu flouté + compte à rebours ── */
+  /* ── Outil pas encore sorti ──────────────────────────────────── */
   .tool.locked { cursor: default; }
-  .tool.locked:hover .tool-icon,
-  .tool.locked:active .tool-icon { transform: none; }
-  .tool-icon .teaser {
-    position: absolute;
-    inset: 0;
-    filter: blur(7px) saturate(1.15);
-    transform: scale(1.45);
-  }
+  .tool.locked:hover .tool-icon, .tool.locked:active .tool-icon { transform: none; }
+  .tool-icon .teaser { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    filter: blur(8px) saturate(1.3); transform: scale(1.5); }
   .lock {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    background: rgba(17,32,51,0.42);
-    color: #fff;
-    text-align: center;
-    padding: 4px;
+    position: absolute; inset: 0; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    background: rgba(70,52,28,.40);
+    -webkit-backdrop-filter: blur(3px) saturate(1.4); backdrop-filter: blur(3px) saturate(1.4);
+    text-align: center; padding: 4px; color: #fff;
   }
-  .lock .cd {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.2px;
-    line-height: 1.1;
-  }
-  .lock .at {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.54rem;
-    letter-spacing: 0.7px;
-    text-transform: uppercase;
-    opacity: 0.88;
-    line-height: 1.2;
-  }
-  .lock svg { width: 14px; height: 14px; opacity: 0.9; }
+  .lock .cd { font-size: .86rem; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: .2px; line-height: 1.1;
+    text-shadow: 0 1px 8px rgba(70,52,28,.4); }
+  .lock .at { font-size: .54rem; letter-spacing: .8px; text-transform: uppercase; opacity: .9; line-height: 1.2; }
+  .lock svg { width: 14px; height: 14px; opacity: .92; }
   .blur { filter: blur(5px); user-select: none; pointer-events: none; }
 
-  /* Au moment de la sortie : le flou se dissipe */
-  .tool.reveal .tool-icon { animation: unveil 1s cubic-bezier(.2,.8,.2,1) both; }
+  .tool.reveal .tool-icon { animation: unveil 1.1s cubic-bezier(.2,.8,.2,1) both; }
   @keyframes unveil {
-    from { filter: blur(10px) brightness(1.2); transform: scale(1.15); }
-    to   { filter: none; transform: scale(1); }
+    from { filter: blur(12px) brightness(1.4); transform: scale(1.18); }
+    to   { filter: none; transform: none; }
   }
 
-  .empty {
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 0.88rem;
-    max-width: 380px;
-    margin: 40px auto 0;
-    line-height: 1.5;
-  }
+  .empty { text-align: center; color: var(--ink-soft); font-size: .9rem; max-width: 380px; margin: 40px auto 0; line-height: 1.5; }
 
+  /* ── Pied : pastille de verre flottante, façon Dock ──────────── */
   footer {
-    text-align: center;
-    padding: 10px 20px 28px;
-    font-size: 0.7rem;
-    color: var(--text-muted);
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 18px; border-radius: 999px; white-space: nowrap;
+    font-size: .72rem; color: var(--ink-soft);
+    border: 1px solid var(--glass-edge);
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8); backdrop-filter: blur(24px) saturate(1.8);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 10px 30px rgba(70,52,28,.28);
   }
-  footer .admin-link {
-    display: inline-flex;
-    vertical-align: middle;
-    margin-left: 8px;
-    color: var(--text-muted);
-    opacity: 0.45;
-    transition: opacity 0.15s ease;
-  }
+  footer .admin-link { display: inline-flex; color: inherit; opacity: .7; transition: opacity .15s ease; }
   footer .admin-link:hover, footer .admin-link:focus-visible { opacity: 1; }
   footer .admin-link svg { width: 13px; height: 13px; }
+
+  @media (max-width: 420px) {
+    .grid { grid-template-columns: repeat(3, 1fr); gap: 34px 8px; }
+    .tool-icon { width: 80px; height: 80px; border-radius: 23px; }
+  }
 </style>
 </head>
 <body>
+
+<div class="wallpaper" aria-hidden="true"></div>
 
 <header>
   <div class="wordmark">Aélythèque</div>
@@ -248,7 +193,7 @@
 </header>
 
 <div class="search-wrap">
-  <input id="search" type="text" placeholder="Rechercher un outil…" autocomplete="off" />
+  <input id="search" type="search" placeholder="Rechercher" autocomplete="off" aria-label="Rechercher un outil" />
 </div>
 
 <main>
