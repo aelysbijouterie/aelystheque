@@ -417,7 +417,14 @@
     const name = $('#f_name').value.trim(), url = $('#f_url').value.trim();
     if (!/^https?:\/\//i.test(url)) { msg.textContent = 'Le lien doit commencer par http:// ou https://'; return; }
 
+    // « Tout de suite » : on date la sortie (sert à la pastille « Nouveau » pendant 7 jours).
+    // Un outil déjà sorti garde sa date d'origine.
     let release_at = null;
+    if (modeVal() === 'now') {
+      if (!editing) release_at = new Date().toISOString();
+      else if (editing.release_at && new Date(editing.release_at).getTime() <= Date.now()) release_at = editing.release_at;
+      else if (editing.release_at) release_at = new Date().toISOString();
+    }
     if (modeVal() === 'later') {
       const v = $('#f_when').value;
       if (!v) { msg.textContent = 'Choisis une date et une heure de sortie.'; return; }
