@@ -115,7 +115,7 @@
   @keyframes shimmer { 0%, 55% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
 
   /* ── Grille Launchpad ────────────────────────────────────────── */
-  main { max-width: 860px; margin: 0 auto; padding: 38px 24px 170px; }
+  main { max-width: 860px; margin: 0 auto; padding: 38px 24px 110px; }
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
@@ -138,7 +138,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .grid.intro .tool { animation: none; opacity: 1; }
-    .tool.reveal .tool-icon, .pill.new::after, .editing .tool .ti { animation: none !important; }
+    .tool.reveal .tool-icon, .pill.new::after { animation: none !important; }
     .wallpaper { transition: none; }
   }
 
@@ -232,46 +232,6 @@
 
   .empty { text-align: center; color: var(--ink-soft); font-size: .9rem; max-width: 380px; margin: 40px auto 0; line-height: 1.5; }
 
-  /* ── Mode édition ────────────────────────────────────────────── */
-  .editbar { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 20; display: flex; align-items: center; gap: 12px;
-    padding: 8px 10px 8px 18px; border-radius: 999px; font-size: .76rem; color: var(--ink-soft); white-space: nowrap; animation: pop .25s ease; }
-  .btn { font: 500 .76rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; cursor: pointer; color: var(--ink);
-    padding: 7px 14px; border-radius: 999px; border: 1px solid var(--glass-edge); background: rgba(255,255,255,.5); }
-  .btn.primary { background: linear-gradient(180deg, #EBC06A, #A87B27); color: #fff; border-color: rgba(255,255,255,.6); }
-  .btn:hover { filter: brightness(1.05); }
-  .pin { display: none; position: absolute; top: -9px; left: -9px; z-index: 5; width: 28px; height: 28px; border-radius: 50%;
-    align-items: center; justify-content: center; cursor: pointer; color: var(--ink-soft); line-height: 0;
-    border: 1px solid var(--glass-edge); background: rgba(255,255,255,.7);
-    box-shadow: 0 4px 10px rgba(var(--shadow),.25); }
-  .pin svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; pointer-events: none; }
-  .pin.on { background: linear-gradient(180deg, #EBC06A, #A87B27); color: #fff; }
-  .pin.on svg { fill: currentColor; }
-  .editing .pin { display: flex; }
-  .editing .tool { cursor: grab; touch-action: none; }
-  .editing .tool:hover .tool-icon, .editing .tool:active .tool-icon { transform: none; }
-  .editing .tool:not(.dragging) .ti { animation: wiggle .27s ease-in-out infinite alternate; }
-  .editing .tool:nth-child(2n) .ti { animation-delay: -.13s; animation-direction: alternate-reverse; }
-  .editing .tool:nth-child(3n) .ti { animation-delay: -.07s; }
-  @keyframes wiggle { from { transform: rotate(-1.7deg); } to { transform: rotate(1.7deg); } }
-  .tool.dragging { z-index: 50; cursor: grabbing; pointer-events: none; }
-  .tool.dragging .ti { transform: scale(1.14); transition: transform .15s ease; }
-  .tool.dragging .tool-icon { box-shadow: 0 30px 60px rgba(var(--shadow),.5), inset 0 0 0 1px rgba(255,255,255,.4), inset 0 1.5px 1px rgba(255,255,255,.7); }
-  body.is-dragging, body.is-dragging * { cursor: grabbing !important; }
-
-  /* ── Dock des favoris ────────────────────────────────────────── */
-  .dock { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 10;
-    display: flex; align-items: flex-end; gap: 10px; padding: 9px 12px; border-radius: 26px; }
-  .dock-item { position: relative; display: block; text-decoration: none; line-height: 0; }
-  .dock-item .tool-icon { width: 54px; height: 54px; border-radius: 16px; font-size: 1.5rem;
-    transform: scale(var(--s, 1)); transform-origin: 50% 100%; transition: transform .14s ease-out; }
-  .dock-item:hover .tool-icon { transform: scale(var(--s, 1)); }
-  .dock-item .tip { position: absolute; left: 50%; bottom: calc(100% + 10px); white-space: nowrap; pointer-events: none; line-height: 1.2;
-    transform: translate(-50%, calc((var(--s, 1) - 1) * -54px)); opacity: 0; transition: opacity .12s ease;
-    font-size: .72rem; font-weight: 500; padding: 5px 11px; border-radius: 9px; color: var(--ink);
-    background: rgba(255,255,255,.78); border: 1px solid var(--glass-edge);
-    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 6px 16px rgba(var(--shadow),.22); }
-  .dock-item:hover .tip { opacity: 1; }
-
   /* ── Pied ────────────────────────────────────────────────────── */
   footer { position: fixed; left: 18px; bottom: 24px; z-index: 9; display: flex; align-items: center; gap: 10px;
     padding: 8px 14px; border-radius: 999px; white-space: nowrap; font-size: .7rem; color: var(--ink-soft); }
@@ -297,7 +257,6 @@
   @media (max-width: 420px) {
     .grid { grid-template-columns: repeat(3, 1fr); gap: 34px 8px; }
     .tool-icon { width: 80px; height: 80px; border-radius: 23px; }
-    .dock-item .tool-icon { width: 48px; height: 48px; }
   }
 </style>
 </head>
@@ -325,12 +284,6 @@
   <div class="wd-next" id="wdNext" hidden><span>Prochaine sortie</span><b id="wdCd">--:--:--</b></div>
 </aside>
 
-<div class="editbar glass" id="editbar" hidden>
-  <span>Glisse pour réorganiser · ★ pour épingler au Dock</span>
-  <button class="btn" id="resetBtn" type="button">Réinitialiser</button>
-  <button class="btn primary" id="doneBtn" type="button">Terminé</button>
-</div>
-
 <header>
   <div class="wordmark">Aélythèque</div>
   <div class="rule"></div>
@@ -351,13 +304,8 @@
   <p id="emptyMsg" class="empty" style="display:none;"></p>
 </main>
 
-<nav class="dock glass" id="dock" aria-label="Favoris" hidden></nav>
-
 <footer class="glass">
   <span class="label">Aélys Bijouterie</span>
-  <button id="editBtn" type="button" aria-label="Modifier l’écran d’accueil" title="Modifier l’écran d’accueil">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/></svg>
-  </button>
   <a href="admin.html" aria-label="Administration" title="Administration">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
   </a>
@@ -382,26 +330,16 @@
   const CFG = window.AELYS_CONFIG || {};
   const CACHE_KEY = 'aelytheque.tools.v1';
   const NEW_DAYS = 7;
-  const MAX_FAVS = 6;
   const $ = id => document.getElementById(id);
   const grid = $('grid'), searchEl = $('search');
 
   let tools = [];
   let offset = 0;            // horloge serveur - horloge de l'appareil
   let reloading = false;
-  let editing = false;
   let introDone = false;
   let lastHtml = '';
   let lockedPrev = new Set();
   let releaseTimer = null;
-  let suppressUntil = 0;
-
-  // Préférences propres à chaque appareil (ordre, favoris)
-  const LS = {
-    get(k, d) { try { const v = localStorage.getItem('aelytheque.' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
-    set(k, v) { try { localStorage.setItem('aelytheque.' + k, JSON.stringify(v)); } catch (e) {} },
-    del(k)    { try { localStorage.removeItem('aelytheque.' + k); } catch (e) {} }
-  };
 
   // ── Utilitaires ─────────────────────────────────────────────────
 
@@ -478,27 +416,8 @@
     }
   }
 
-  // ── Ordre & favoris (par appareil) ──────────────────────────────
-
-  function orderedTools() {
-    const order = LS.get('order', []);
-    const rank = id => { const i = order.indexOf(id); return i < 0 ? 1e6 : i; };
-    return tools.map((t, i) => [t, i]).sort((a, b) => rank(a[0].id) - rank(b[0].id) || a[1] - b[1]).map(x => x[0]);
-  }
-  function favIds() {
-    const f = LS.get('favs', null);
-    return Array.isArray(f) ? f : orderedTools().filter(t => !t.locked).slice(0, 3).map(t => t.id);
-  }
-  function toggleFav(id) {
-    let f = favIds();
-    if (f.includes(id)) f = f.filter(x => x !== id);
-    else { if (f.length >= MAX_FAVS) { toast(`${MAX_FAVS} favoris maximum`); return false; } f = [...f, id]; }
-    LS.set('favs', f); renderDock(); return true;
-  }
-
   // ── Rendu de la grille ──────────────────────────────────────────
 
-  const STAR = '<svg viewBox="0 0 24 24"><polygon points="12 2 15.1 8.6 22 9.5 17 14.4 18.2 21.5 12 18.1 5.8 21.5 7 14.4 2 9.5 8.9 8.6"/></svg>';
   const LOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 
   function iconInner(t) {
@@ -509,7 +428,7 @@
     return bg ? ` style="--tile-bg:${escapeHtml(bg)}"` : '';
   }
 
-  function tileHtml(t, reveal, favs) {
+  function tileHtml(t, reveal) {
     const id = escapeHtml(t.id);
     if (t.locked && t.releaseAt) {
       const teaser = t.teaser ? `<img class="teaser" src="${escapeHtml(t.teaser)}" alt="" />` : '';
@@ -530,8 +449,7 @@
     const desc = t.desc ? `<div class="tool-desc">${escapeHtml(t.desc)}</div>` : '';
     return `
       <a class="tool${reveal ? ' reveal' : ''}" data-id="${id}" href="${escapeHtml(safeUrl(t.url))}"${styleAttr(t)} draggable="false">
-        <div class="ti"><div class="tool-icon">${iconInner(t)}</div>${badge}
-          <span class="pin${favs.includes(t.id) ? ' on' : ''}" role="button" aria-label="Épingler au Dock">${STAR}</span></div>
+        <div class="ti"><div class="tool-icon">${iconInner(t)}</div>${badge}</div>
         <div class="tool-name">${escapeHtml(t.name)}</div>
         ${desc}
       </a>`;
@@ -540,11 +458,11 @@
   function renderGrid() {
     const emptyMsg = $('emptyMsg');
     const q = searchEl.value.trim().toLowerCase();
-    const ordered = orderedTools();
+    const ordered = tools;
     const list = !q ? ordered : ordered.filter(t => !t.locked &&
       ((t.name || '').toLowerCase().includes(q) || (t.desc || '').toLowerCase().includes(q)));
 
-    renderDock(); renderNews(); scheduleRelease();
+    renderNews(); scheduleRelease();
 
     if (tools.length === 0 || list.length === 0) {
       grid.innerHTML = ''; lastHtml = '';
@@ -556,8 +474,7 @@
 
     const revealIds = tools.filter(t => !t.locked && lockedPrev.has(t.id)).map(t => t.id);
     lockedPrev = new Set(tools.filter(t => t.locked).map(t => t.id));
-    const favs = favIds();
-    const html = list.map(t => tileHtml(t, revealIds.includes(t.id), favs)).join('');
+    const html = list.map(t => tileHtml(t, revealIds.includes(t.id))).join('');
 
     if (html !== lastHtml) {                 // ne recrée rien si rien n'a changé → pas d'animation rejouée
       lastHtml = html;
@@ -592,27 +509,6 @@
     const html = parts.join('');
     if ($('news').dataset.h !== html) { $('news').innerHTML = html; $('news').dataset.h = html; }
   }
-
-  // ── Dock des favoris ────────────────────────────────────────────
-
-  function renderDock() {
-    const dock = $('dock');
-    const items = favIds().map(findTool).filter(t => t && !t.locked);
-    dock.hidden = items.length === 0;
-    dock.innerHTML = items.map(t => `
-      <a class="dock-item" data-id="${escapeHtml(t.id)}" href="${escapeHtml(safeUrl(t.url))}"${styleAttr(t)} draggable="false">
-        <div class="tool-icon">${iconInner(t)}</div><span class="tip">${escapeHtml(t.name)}</span>
-      </a>`).join('');
-  }
-  // Loupe façon macOS
-  $('dock').addEventListener('pointermove', e => {
-    if (e.pointerType === 'touch') return;
-    $('dock').querySelectorAll('.dock-item').forEach(a => {
-      const r = a.getBoundingClientRect(), d = Math.abs(e.clientX - (r.left + r.width / 2));
-      a.style.setProperty('--s', (1 + 0.62 * Math.pow(Math.max(0, 1 - d / 120), 2)).toFixed(3));
-    });
-  });
-  $('dock').addEventListener('pointerleave', () => $('dock').querySelectorAll('.dock-item').forEach(a => a.style.removeProperty('--s')));
 
   // ── Révélation en direct ────────────────────────────────────────
 
@@ -685,89 +581,6 @@
 
   async function refresh() { await load(); renderGrid(); }
 
-  // ── Mode édition (ordre + favoris) ──────────────────────────────
-
-  function setEditing(on) {
-    editing = on;
-    document.body.classList.toggle('editing', on);
-    $('editbar').hidden = !on;
-    if (on) { grid.classList.remove('intro'); closeCtx(); if (searchEl.value) { searchEl.value = ''; renderGrid(); } }
-  }
-  $('editBtn').addEventListener('click', () => setEditing(!editing));
-  $('doneBtn').addEventListener('click', () => setEditing(false));
-  function resetPrefs() { LS.del('order'); LS.del('favs'); lastHtml = ''; renderGrid(); toast('Organisation réinitialisée'); }
-  $('resetBtn').addEventListener('click', resetPrefs);
-
-  grid.addEventListener('click', e => {
-    const pin = e.target.closest('.pin');
-    if (editing) {
-      e.preventDefault();
-      if (pin) { const id = pin.closest('.tool').dataset.id; if (toggleFav(id)) pin.classList.toggle('on'); }
-      return;
-    }
-    if (Date.now() < suppressUntil) e.preventDefault();
-  });
-  grid.addEventListener('dragstart', e => e.preventDefault());
-
-  // Glisser-déposer (souris et tactile), avec déplacement fluide des voisins
-  let drag = null;
-  function flip(mutate) {
-    const kids = [...grid.children].filter(k => k !== drag.el);
-    const first = new Map(kids.map(k => [k, k.getBoundingClientRect()]));
-    mutate();
-    kids.forEach(k => {
-      const l = k.getBoundingClientRect(), f = first.get(k), dx = f.left - l.left, dy = f.top - l.top;
-      if (dx || dy) k.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: 240, easing: 'cubic-bezier(.2,.8,.2,1)' });
-    });
-  }
-  grid.addEventListener('pointerdown', e => {
-    if (!editing || e.button > 0 || e.target.closest('.pin')) return;
-    const el = e.target.closest('.tool'); if (!el) return;
-    drag = { el, sx: e.clientX, sy: e.clientY, on: false };
-    try { el.setPointerCapture(e.pointerId); } catch (_) {}
-  });
-  grid.addEventListener('pointermove', e => {
-    if (!drag) return;
-    const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
-    if (!drag.on) {
-      if (Math.hypot(dx, dy) < 5) return;
-      drag.on = true; drag.el.classList.add('dragging'); document.body.classList.add('is-dragging');
-    }
-    const el = drag.el;
-    el.style.transform = ''; const r = el.getBoundingClientRect();
-    el.style.transform = `translate(${e.clientX - (r.left + r.width / 2)}px, ${e.clientY - (r.top + 47)}px)`;
-    const under = document.elementFromPoint(e.clientX, e.clientY);
-    const tgt = under && under.closest && under.closest('.tool');
-    if (tgt && tgt !== el && grid.contains(tgt)) {
-      const kids = [...grid.children];
-      flip(() => grid.insertBefore(el, kids.indexOf(tgt) > kids.indexOf(el) ? tgt.nextSibling : tgt));
-    }
-  });
-  function endDrag() {
-    if (!drag) return;
-    if (drag.on) {
-      drag.el.classList.remove('dragging'); drag.el.style.transform = '';
-      document.body.classList.remove('is-dragging');
-      suppressUntil = Date.now() + 350;
-      const ids = [...grid.children].map(c => c.dataset.id);
-      const rest = LS.get('order', []).filter(id => !ids.includes(id));
-      LS.set('order', [...ids, ...rest]);
-      lastHtml = '';                        // l'ordre en mémoire a changé : on resynchronise sans animation
-    }
-    drag = null;
-  }
-  grid.addEventListener('pointerup', endDrag);
-  grid.addEventListener('pointercancel', endDrag);
-
-  // Appui long sur une icône = entrer en mode édition
-  let lp = null;
-  grid.addEventListener('pointerdown', e => {
-    if (editing || e.button > 0 || !e.target.closest('.tool')) return;
-    lp = { x: e.clientX, y: e.clientY, t: setTimeout(() => { lp = null; suppressUntil = Date.now() + 900; setEditing(true); }, 650) };
-  });
-  grid.addEventListener('pointermove', e => { if (lp && Math.hypot(e.clientX - lp.x, e.clientY - lp.y) > 8) { clearTimeout(lp.t); lp = null; } });
-  ['pointerup', 'pointercancel'].forEach(ev => grid.addEventListener(ev, () => { if (lp) { clearTimeout(lp.t); lp = null; } }));
-
   // ── Clic droit ──────────────────────────────────────────────────
 
   const ctx = $('ctx');
@@ -786,28 +599,23 @@
     ctx.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + 'px';
     ctx.style.top = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + 'px';
   }
-  function editItem() { return editing ? { label: 'Terminer la modification', fn: () => setEditing(false) } : { label: 'Modifier l’écran d’accueil', fn: () => setEditing(true) }; }
 
   document.addEventListener('contextmenu', e => {
     if (/^(input|textarea)$/i.test(e.target.tagName || '')) return;
     e.preventDefault();
-    if (Date.now() < suppressUntil) return;          // appui long tactile déjà traité
-    const el = e.target.closest('.tool, .dock-item');
+    const el = e.target.closest('.tool');
     const t = el && findTool(el.dataset.id);
     if (t && t.locked) {
-      openCtx(e.clientX, e.clientY, [{ label: t.releaseAt ? `Disponible ${releaseLabel(t.releaseAt)}` : 'Bientôt disponible', disabled: true }, '-', editItem()]);
+      openCtx(e.clientX, e.clientY, [{ label: t.releaseAt ? `Disponible ${releaseLabel(t.releaseAt)}` : 'Bientôt disponible', disabled: true }]);
     } else if (t) {
-      const abs = new URL(safeUrl(t.url), location.href).href, fav = favIds().includes(t.id);
+      const abs = new URL(safeUrl(t.url), location.href).href;
       openCtx(e.clientX, e.clientY, [
         { label: 'Ouvrir', fn: () => { location.href = abs; } },
         { label: 'Ouvrir dans un nouvel onglet', fn: () => window.open(abs, '_blank', 'noopener') },
-        { label: 'Copier le lien', fn: () => { (navigator.clipboard ? navigator.clipboard.writeText(abs) : Promise.reject()).then(() => toast('Lien copié'), () => toast('Copie impossible')); } },
-        '-',
-        { label: fav ? 'Retirer du Dock' : 'Épingler au Dock', fn: () => { if (toggleFav(t.id)) { lastHtml = ''; renderGrid(); } } },
-        '-', editItem()
+        { label: 'Copier le lien', fn: () => { (navigator.clipboard ? navigator.clipboard.writeText(abs) : Promise.reject()).then(() => toast('Lien copié'), () => toast('Copie impossible')); } }
       ]);
     } else {
-      openCtx(e.clientX, e.clientY, [editItem(), { label: 'Réinitialiser l’organisation', fn: resetPrefs }, '-', { label: 'Actualiser la liste', fn: () => { lastHtml = ''; refresh(); toast('Liste actualisée'); } }]);
+      openCtx(e.clientX, e.clientY, [{ label: 'Actualiser la liste', fn: () => { lastHtml = ''; refresh(); toast('Liste actualisée'); } }]);
     }
   });
   document.addEventListener('pointerdown', e => { if (!ctx.hidden && !ctx.contains(e.target)) closeCtx(); });
@@ -820,7 +628,7 @@
   searchEl.addEventListener('input', renderGrid);
   document.addEventListener('keydown', e => {
     const typing = /^(input|textarea)$/i.test((e.target.tagName || ''));
-    if (e.key === 'Escape') { if (!ctx.hidden) closeCtx(); else if (editing) setEditing(false); return; }
+    if (e.key === 'Escape') { if (!ctx.hidden) closeCtx(); return; }
     if ((e.key === '/' && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
       e.preventDefault(); searchEl.focus(); searchEl.select();
     }
