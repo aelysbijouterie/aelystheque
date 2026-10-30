@@ -89,6 +89,16 @@
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .empty { text-align: center; color: var(--text-muted); padding: 30px 10px; font-size: .88rem; }
 
+  dialog .vbox { padding: 22px 24px 20px; }
+  .vrow { display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid var(--sand); border-radius: 12px; margin: 10px 0; background: var(--cream); }
+  .vposter { flex: none; width: 76px; aspect-ratio: 16/9; border-radius: 8px; overflow: hidden; background: #1c2433; color: #fff;
+             display: flex; align-items: center; justify-content: center; font-size: .9rem; }
+  .vposter img { width: 100%; height: 100%; object-fit: cover; }
+  .vrow .actions { max-width: none; }
+  #vdList .empty { padding: 14px 6px; }
+  .code { display: block; margin-top: 6px; padding: 8px 10px; border-radius: 8px; background: #f1ebe3; font: 400 .7rem ui-monospace, Consolas, monospace; color: var(--text); word-break: break-all; user-select: all; }
+  input[type=file] { font: 400 .84rem 'DM Sans', sans-serif; max-width: 100%; }
+
   @media (max-width: 560px) {
     .row { flex-wrap: wrap; }
     .actions { max-width: none; justify-content: flex-start; width: 100%; }
@@ -175,6 +185,30 @@
       <button type="submit" class="btn primary" id="saveBtn">Enregistrer</button>
     </div>
   </form>
+</dialog>
+
+<dialog id="vdlg">
+  <div class="vbox">
+    <h3 id="vdTitle">Vidéos</h3>
+    <div class="hint">Présentation / tutos : 3 minutes maximum chacune. Elles s’ouvrent dans une fenêtre sur la page d’accueil, sous l’outil.</div>
+    <div id="vdList"></div>
+    <form id="vForm">
+      <label for="v_title">Titre de la vidéo</label>
+      <input id="v_title" type="text" maxlength="60" placeholder="Présentation, Tuto : faire une recherche…" required />
+      <label for="v_file">Fichier vidéo (MP4 ou WebM · 3 min · 50 Mo max)</label>
+      <input id="v_file" type="file" accept="video/mp4,video/webm" />
+      <label for="v_url">… ou un lien (YouTube, Vimeo, Loom, fichier MP4)</label>
+      <input id="v_url" type="url" placeholder="https://…" />
+      <div class="hint">Pour un démarrage instantané : MP4 H.264 en 720p, « optimisé web ».
+        <span class="code">ffmpeg -i entree.mp4 -vf scale=-2:720 -c:v libx264 -crf 24 -c:a aac -movflags +faststart sortie.mp4</span>
+        (ou HandBrake, preset « Fast 720p30 », case « Optimisé pour le web »). Résultat : environ 15 à 25 Mo pour 3 min.</div>
+      <div class="msg" id="vMsg" role="alert"></div>
+      <div class="foot">
+        <button type="button" class="btn" id="vClose">Fermer</button>
+        <button type="submit" class="btn primary" id="vAdd">Ajouter la vidéo</button>
+      </div>
+    </form>
+  </div>
 </dialog>
 
 <div id="toast" role="status"></div>
@@ -297,10 +331,21 @@
 
   // ── Liste ───────────────────────────────────────────────────────
 
+  let videos = {};      // id de l'outil -> liste de vidéos
+  let vTool = null;
+
   async function refresh() {
-    const { data, error } = await sb.from('tools').select('*').order('position').order('created_at');
-    if (error) { toast('Erreur de chargement : ' + error.message); return; }
-    tools = data; render();
+    const [a, b] = await Promise.all([
+      sb.from('tools').select('*').order('position').order('created_at'),
+      sb.from('tool_videos').select('*').order('position').order('created_at')
+    ]);
+    if (a.error) { toast('Erreur de chargement : ' + a.error.message); return; }
+    tools = a.data;
+    videos = {};
+    if (b.error) { if (!refresh.warned) { refresh.warned = true; toast('Vidéos indisponibles : exécute supabase-videos.sql dans Supabase.'); } }
+    else (b.data || []).forEach(v => (videos[v.tool_id] = videos[v.tool_id] || []).push(v));
+    render();
+    if (vTool && $('vdlg').open) { vTool = tools.find(t => t.id === vTool.id) || vTool; renderVideos(); }
   }
 
   function status(t) {
@@ -323,6 +368,7 @@
           <button class="btn sm" data-a="up" ${i === 0 ? 'disabled' : ''} aria-label="Monter">↑</button>
           <button class="btn sm" data-a="down" ${i === tools.length - 1 ? 'disabled' : ''} aria-label="Descendre">↓</button>
           <button class="btn sm" data-a="edit">Modifier</button>
+          <button class="btn sm" data-a="vid">▶ Vidéos${(videos[t.id] || []).length ? ' (' + videos[t.id].length + ')' : ''}</button>
           ${scheduled ? '<button class="btn sm" data-a="now">Publier maintenant</button>' : ''}
           <button class="btn sm" data-a="toggle">${t.active ? 'Retirer' : 'Remettre'}</button>
           <button class="btn sm danger" data-a="del">Supprimer</button>
@@ -337,6 +383,7 @@
     const i = tools.findIndex(t => t.id === id), t = tools[i];
     const a = b.dataset.a;
     if (a === 'edit') return openForm(t);
+    if (a === 'vid') return openVideoDlg(t);
     if (a === 'up' || a === 'down') return move(i, a === 'up' ? -1 : 1);
     if (a === 'now') { if (!confirm(`Publier « ${t.name} » maintenant ?`)) return; return update(id, { release_at: null }, 'Publié.'); }
     if (a === 'toggle') return update(id, { active: !t.active }, t.active ? 'Retiré de la page.' : 'Remis en ligne.');
@@ -362,8 +409,10 @@
 
   async function remove(t) {
     if (!confirm(`Supprimer définitivement « ${t.name} » ?\n(Astuce : « Retirer » le masque sans le supprimer.)`)) return;
+    const vfiles = videos[t.id] || [];
     const { error } = await sb.from('tools').delete().eq('id', t.id);
     if (error) return toast('Erreur : ' + error.message);
+    vfiles.forEach(removeVideoFiles);
     const m = /\/storage\/v1\/object\/public\/icons\/([^?]+)/.exec(t.image || '');
     if (m) sb.storage.from('icons').remove([decodeURIComponent(m[1])]);   // nettoyage, sans bloquer
     toast('Supprimé.'); refresh();
@@ -468,6 +517,149 @@
       msg.textContent = 'Erreur : ' + (err.message || 'enregistrement impossible.');
     } finally {
       btn.disabled = false; btn.textContent = 'Enregistrer';
+    }
+  });
+
+  // ── Vidéos d'un outil ───────────────────────────────────────────
+
+  const MAX_SECONDS = 180, MAX_BYTES = 50 * 1024 * 1024;
+  const fmtDur = sec => sec == null ? 'lien externe' : `${Math.floor(sec / 60)}:${pad(sec % 60)}`;
+
+  function storagePath(url) {
+    const m = /\/storage\/v1\/object\/public\/videos\/([^?]+)/.exec(url || '');
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  function removeVideoFiles(v) {                     // nettoyage, sans bloquer
+    const paths = [storagePath(v.url), storagePath(v.poster)].filter(Boolean);
+    if (paths.length) sb.storage.from('videos').remove(paths);
+  }
+
+  // Durée + image de couverture, lues dans le fichier avant l'envoi
+  function probeVideo(file) {
+    return new Promise((resolve, reject) => {
+      const v = document.createElement('video');
+      const u = URL.createObjectURL(file);
+      let done = false;
+      const end = (fn, val) => { if (done) return; done = true; clearTimeout(to); URL.revokeObjectURL(u); fn(val); };
+      const to = setTimeout(() => end(reject, new Error('Lecture du fichier trop longue : format non pris en charge ?')), 12000);
+      v.preload = 'metadata'; v.muted = true; v.playsInline = true;
+      v.onerror = () => end(reject, new Error('Fichier illisible : exporte-le en MP4 (H.264) ou WebM.'));
+      v.onloadedmetadata = () => {
+        if (!isFinite(v.duration)) return end(reject, new Error('Durée de la vidéo introuvable.'));
+        v.currentTime = Math.min(1, v.duration / 2);
+      };
+      v.onseeked = () => {
+        const duration = v.duration;
+        try {
+          const w = 640, h = Math.round(w * (v.videoHeight / v.videoWidth)) || 360;
+          const c = document.createElement('canvas'); c.width = w; c.height = h;
+          c.getContext('2d').drawImage(v, 0, 0, w, h);
+          c.toBlob(b => end(resolve, { duration, posterBlob: b }), 'image/jpeg', 0.8);
+        } catch (e) { end(resolve, { duration, posterBlob: null }); }
+      };
+      v.src = u;
+    });
+  }
+
+  // MP4 « faststart » : l'index (moov) est au début du fichier → la lecture démarre sans attendre
+  async function isFastStart(file) {
+    if (file.type === 'video/webm') return true;
+    const buf = await file.slice(0, 2 * 1024 * 1024).arrayBuffer();
+    const dv = new DataView(buf);
+    let o = 0;
+    while (o + 8 <= buf.byteLength) {
+      let size = dv.getUint32(o);
+      const type = String.fromCharCode(dv.getUint8(o + 4), dv.getUint8(o + 5), dv.getUint8(o + 6), dv.getUint8(o + 7));
+      if (type === 'moov') return true;
+      if (type === 'mdat') return false;
+      if (size === 1) { if (o + 16 > buf.byteLength) return false; size = Number(dv.getBigUint64(o + 8)); }
+      if (size < 8) return false;
+      o += size;
+    }
+    return false;
+  }
+
+  function openVideoDlg(t) {
+    vTool = t;
+    $('vdTitle').textContent = 'Vidéos · ' + t.name;
+    $('vForm').reset(); $('vMsg').textContent = '';
+    renderVideos();
+    $('vdlg').showModal();
+  }
+  $('vClose').addEventListener('click', () => $('vdlg').close());
+
+  function renderVideos() {
+    const list = videos[vTool.id] || [];
+    $('vdList').innerHTML = list.length ? list.map((v, i) => `
+      <div class="vrow" data-id="${esc(v.id)}">
+        <div class="vposter">${v.poster ? `<img src="${esc(v.poster)}" alt="" />` : '▶'}</div>
+        <div class="info"><b>${esc(v.title)}</b><span class="u">${esc(fmtDur(v.duration_s))} · ${esc(v.url)}</span></div>
+        <div class="actions">
+          <button class="btn sm" data-a="vup" ${i === 0 ? 'disabled' : ''} aria-label="Monter">↑</button>
+          <button class="btn sm" data-a="vdown" ${i === list.length - 1 ? 'disabled' : ''} aria-label="Descendre">↓</button>
+          <button class="btn sm danger" data-a="vdel">Supprimer</button>
+        </div>
+      </div>`).join('') : '<div class="empty">Aucune vidéo pour cet outil.</div>';
+  }
+
+  $('vdList').addEventListener('click', async e => {
+    const b = e.target.closest('button[data-a]'); if (!b) return;
+    const list = videos[vTool.id] || [], id = b.closest('.vrow').dataset.id;
+    const i = list.findIndex(v => v.id === id), v = list[i];
+    if (b.dataset.a === 'vdel') {
+      if (!confirm(`Supprimer la vidéo « ${v.title} » ?`)) return;
+      const { error } = await sb.from('tool_videos').delete().eq('id', id);
+      if (error) return toast('Erreur : ' + error.message);
+      removeVideoFiles(v); toast('Vidéo supprimée.'); return refresh();
+    }
+    const j = i + (b.dataset.a === 'vup' ? -1 : 1);
+    if (j < 0 || j >= list.length) return;
+    const jobs = list.map((x, k) => {
+      const pos = k === i ? j : k === j ? i : k;
+      return x.position === pos ? null : sb.from('tool_videos').update({ position: pos }).eq('id', x.id);
+    }).filter(Boolean);
+    await Promise.all(jobs); refresh();
+  });
+
+  $('vForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('vMsg'), btn = $('vAdd'); msg.textContent = '';
+    const title = $('v_title').value.trim(), file = $('v_file').files[0], link = $('v_url').value.trim();
+    if (!file && !link) { msg.textContent = 'Choisis un fichier ou colle un lien.'; return; }
+    if (file && link) { msg.textContent = 'Un fichier OU un lien, pas les deux.'; return; }
+    btn.disabled = true;
+    try {
+      let url = link, poster = null, duration = null;
+      if (file) {
+        if (file.size > MAX_BYTES) throw new Error(`Fichier trop lourd (${(file.size / 1048576).toFixed(0)} Mo, 50 Mo max). Compresse-le avec la commande ci-dessous.`);
+        btn.textContent = 'Analyse…';
+        const info = await probeVideo(file);
+        if (info.duration > MAX_SECONDS + 0.5) throw new Error(`Vidéo trop longue (${fmtDur(Math.round(info.duration))}). 3 minutes maximum : raccourcis-la.`);
+        duration = Math.round(info.duration);
+        if (!(await isFastStart(file)) &&
+            !confirm('Cette vidéo n’est pas « optimisée web » : elle peut mettre plusieurs secondes à démarrer.\n\nPour un démarrage instantané, ré-exporte-la avec la commande affichée sous le formulaire.\n\nL’envoyer quand même ?'))
+          throw new Error('Envoi annulé.');
+        btn.textContent = 'Envoi…';
+        const ext = file.type === 'video/webm' ? 'webm' : 'mp4', base = crypto.randomUUID();
+        const up = await sb.storage.from('videos').upload(`${base}.${ext}`, file, { contentType: file.type, upsert: false, cacheControl: '31536000' });
+        if (up.error) throw up.error;
+        url = sb.storage.from('videos').getPublicUrl(`${base}.${ext}`).data.publicUrl;
+        if (info.posterBlob) {
+          const pp = await sb.storage.from('videos').upload(`${base}-poster.jpg`, info.posterBlob, { contentType: 'image/jpeg', upsert: false, cacheControl: '31536000' });
+          if (!pp.error) poster = sb.storage.from('videos').getPublicUrl(`${base}-poster.jpg`).data.publicUrl;
+        }
+      } else if (!/^https?:\/\//i.test(link)) {
+        throw new Error('Le lien doit commencer par https://');
+      }
+      const list = videos[vTool.id] || [];
+      const position = list.length ? Math.max(...list.map(v => v.position)) + 1 : 0;
+      const { error } = await sb.from('tool_videos').insert({ tool_id: vTool.id, title, url, poster, duration_s: duration, position });
+      if (error) throw error;
+      $('vForm').reset(); toast('Vidéo ajoutée.'); await refresh();
+    } catch (err) {
+      msg.textContent = err.message || 'Envoi impossible.';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Ajouter la vidéo';
     }
   });
 

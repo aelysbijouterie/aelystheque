@@ -174,7 +174,7 @@
       inset 0 0 0 1px rgba(255,255,255,.34), inset 0 1.5px 1px rgba(255,255,255,.7), inset 0 -12px 20px rgba(255,255,255,.1);
   }
   .tool:active .tool-icon { transform: scale(.93); transition-duration: .08s; }
-  .tool:focus-visible .tool-icon { outline: 3px solid rgba(47,37,25,.45); outline-offset: 3px; }
+  .tool-link:focus-visible .tool-icon { outline: 3px solid rgba(47,37,25,.45); outline-offset: 3px; }
 
   .tool-name { font-size: .8rem; font-weight: 500; text-align: center; line-height: 1.25; max-width: 108px; text-shadow: 0 1px 8px rgba(255,255,255,.55); }
   .tool-desc { font-size: .66rem; color: var(--ink-soft); text-align: center; line-height: 1.25; max-width: 108px;
@@ -231,6 +231,46 @@
   @keyframes flash { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
 
   .empty { text-align: center; color: var(--ink-soft); font-size: .9rem; max-width: 380px; margin: 40px auto 0; line-height: 1.5; }
+
+  /* ── Lien vidéo sous chaque app ──────────────────────────────── */
+  .tool-link { display: flex; flex-direction: column; align-items: center; gap: 9px; width: 100%; color: inherit; text-decoration: none; }
+  .vid-link { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin-top: 1px;
+    padding: 4px 11px 4px 9px; border-radius: 999px; font: 500 .66rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+    color: var(--ink); white-space: nowrap;
+    border: 1px solid var(--glass-edge); background: rgba(255,255,255,.5);
+    -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 3px 10px rgba(var(--shadow),.14);
+    transition: transform .15s ease, background .15s ease, color .15s ease; }
+  .vid-link svg { width: 9px; height: 9px; fill: #A87B27; transition: fill .15s ease; }
+  .vid-link:hover { transform: translateY(-1px); background: #A87B27; color: #fff; }
+  .vid-link:hover svg { fill: #fff; }
+  .vid-link:focus-visible { outline: 2px solid rgba(47,37,25,.5); outline-offset: 2px; }
+
+  /* ── Lecteur vidéo ───────────────────────────────────────────── */
+  .vmodal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: rgba(30,22,12,.55); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2);
+    animation: fadein .18s ease; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+  .vpanel { position: relative; width: min(980px, 100%); max-height: 100%; overflow: auto; padding: 14px; border-radius: 28px;
+    background: rgba(255,255,255,.62); animation: pop .22s cubic-bezier(.2,.8,.2,1); }
+  .vstage { aspect-ratio: 16 / 9; background: #000; border-radius: 18px; overflow: hidden; position: relative; }
+  .vstage video, .vstage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; }
+  .verr { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    margin: 0; color: #fff; font-size: .9rem; text-align: center; padding: 20px; }
+  .verr a { color: #EBC06A; }
+  .vmeta { padding: 12px 6px 4px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .vmeta b { font-size: 1rem; font-weight: 600; }
+  .vmeta span { font-size: .78rem; color: var(--ink-soft); }
+  .vlist { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 4px 2px; }
+  .vlist:empty { display: none; }
+  .vlist button { all: unset; box-sizing: border-box; cursor: pointer; padding: 6px 14px; border-radius: 999px; font: 500 .76rem -apple-system, 'Segoe UI', sans-serif;
+    background: rgba(255,255,255,.65); border: 1px solid var(--glass-edge); color: var(--ink); }
+  .vlist button.on { background: linear-gradient(180deg, #EBC06A, #A87B27); color: #fff; }
+  .vlist button:focus-visible { outline: 2px solid rgba(47,37,25,.5); outline-offset: 2px; }
+  .vclose { position: absolute; top: 22px; right: 22px; z-index: 3; width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+    border: 1px solid rgba(255,255,255,.5); background: rgba(20,14,8,.5); color: #fff; font-size: 1.25rem; line-height: 1;
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .vclose:hover { background: rgba(20,14,8,.75); }
 
   /* ── Pied ────────────────────────────────────────────────────── */
   footer { position: fixed; left: 18px; bottom: 24px; z-index: 9; display: flex; align-items: center; gap: 10px;
@@ -313,6 +353,14 @@
 
 <div class="ctx glass" id="ctx" role="menu" hidden></div>
 <div class="toast" id="toast" role="status"></div>
+<div class="vmodal" id="vmodal" role="dialog" aria-modal="true" aria-label="Vidéo" hidden>
+  <div class="vpanel glass">
+    <button class="vclose" id="vclose" type="button" aria-label="Fermer la vidéo">×</button>
+    <div class="vstage" id="vstage"></div>
+    <div class="vmeta"><b id="vtitle"></b><span id="vtool"></span></div>
+    <div class="vlist" id="vlist"></div>
+  </div>
+</div>
 
 <script src="config.js"></script>
 <script>
@@ -387,7 +435,8 @@
     return {
       id: t.id, name: t.name, desc: t.descr != null ? t.descr : t.desc,
       url: t.url, icon: t.icon, image: t.image, color: t.color, teaser: t.teaser,
-      locked: !!t.locked, releaseAt: t.release_at ? new Date(t.release_at).getTime() : null
+      locked: !!t.locked, releaseAt: t.release_at ? new Date(t.release_at).getTime() : null,
+      videos: Array.isArray(t.videos) ? t.videos : []
     };
   }
 
@@ -447,12 +496,16 @@
     }
     const badge = isNew(t) ? '<span class="badge-new">Nouveau</span>' : '';
     const desc = t.desc ? `<div class="tool-desc">${escapeHtml(t.desc)}</div>` : '';
+    const n = (t.videos || []).length;
+    const vlink = n ? `<button type="button" class="vid-link" data-vid="${id}" aria-label="${n > 1 ? n + ' vidéos' : 'Voir la vidéo'} : ${escapeHtml(t.name)}"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 .6v8.8L9.2 5z"/></svg>${n > 1 ? n + ' vidéos' : 'Voir la vidéo'}</button>` : '';
     return `
-      <a class="tool${reveal ? ' reveal' : ''}" data-id="${id}" href="${escapeHtml(safeUrl(t.url))}"${styleAttr(t)} draggable="false">
-        <div class="ti"><div class="tool-icon">${iconInner(t)}</div>${badge}</div>
-        <div class="tool-name">${escapeHtml(t.name)}</div>
-        ${desc}
-      </a>`;
+      <div class="tool${reveal ? ' reveal' : ''}" data-id="${id}"${styleAttr(t)}>
+        <a class="tool-link" href="${escapeHtml(safeUrl(t.url))}" draggable="false">
+          <div class="ti"><div class="tool-icon">${iconInner(t)}</div>${badge}</div>
+          <div class="tool-name">${escapeHtml(t.name)}</div>
+          ${desc}
+        </a>${vlink}
+      </div>`;
   }
 
   function renderGrid() {
@@ -612,6 +665,7 @@
       openCtx(e.clientX, e.clientY, [
         { label: 'Ouvrir', fn: () => { location.href = abs; } },
         { label: 'Ouvrir dans un nouvel onglet', fn: () => window.open(abs, '_blank', 'noopener') },
+        ...(t.videos && t.videos.length ? [{ label: 'Voir la vidéo', fn: () => openVideos(t.id) }] : []),
         { label: 'Copier le lien', fn: () => { (navigator.clipboard ? navigator.clipboard.writeText(abs) : Promise.reject()).then(() => toast('Lien copié'), () => toast('Copie impossible')); } }
       ]);
     } else {
@@ -628,14 +682,14 @@
   searchEl.addEventListener('input', renderGrid);
   document.addEventListener('keydown', e => {
     const typing = /^(input|textarea)$/i.test((e.target.tagName || ''));
-    if (e.key === 'Escape') { if (!ctx.hidden) closeCtx(); return; }
+    if (e.key === 'Escape') { if (!vmodal.hidden) { closeVideos(); return; } if (!ctx.hidden) closeCtx(); return; }
     if ((e.key === '/' && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
       e.preventDefault(); searchEl.focus(); searchEl.select();
     }
   });
   searchEl.addEventListener('keydown', e => {
     if (e.key === 'Escape') { searchEl.value = ''; searchEl.blur(); renderGrid(); }
-    if (e.key === 'Enter') { const first = grid.querySelector('a.tool'); if (first) location.href = first.href; }
+    if (e.key === 'Enter') { const first = grid.querySelector('a.tool-link'); if (first) location.href = first.href; }
   });
 
   // ── Reflet de verre qui suit le pointeur + parallaxe du fond ────
@@ -653,6 +707,94 @@
       wall.style.setProperty('--py', (-(e.clientY / innerHeight - .5) * 18).toFixed(1) + 'px');
     });
   }
+
+  // ── Vidéos de présentation / tutos ──────────────────────────────
+
+  const vmodal = $('vmodal'), vstage = $('vstage');
+  let vState = null, vOpener = null;
+  const warmed = new Map();
+
+  // Fichier MP4/WebM → lecteur natif ; YouTube / Vimeo / Loom → lecteur intégré
+  function videoSource(url) {
+    let m;
+    if ((m = /(?:youtube\.com\/watch\?[^#]*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([\w-]{11})/.exec(url)))
+      return { type: 'iframe', src: `https://www.youtube-nocookie.com/embed/${m[1]}?autoplay=1&rel=0&modestbranding=1&playsinline=1` };
+    if ((m = /vimeo\.com\/(?:video\/)?(\d+)/.exec(url))) return { type: 'iframe', src: `https://player.vimeo.com/video/${m[1]}?autoplay=1` };
+    if ((m = /loom\.com\/(?:share|embed)\/([a-f0-9]+)/i.exec(url))) return { type: 'iframe', src: `https://www.loom.com/embed/${m[1]}?autoplay=1` };
+    return /^https?:\/\//i.test(url) ? { type: 'video', src: url } : null;
+  }
+
+  // Préchauffage : dès que la souris approche du lien, on ouvre la connexion et on charge l'image de couverture
+  function warm(t) {
+    const v = t && t.videos && t.videos[0]; if (!v) return;
+    if (v.poster) new Image().src = v.poster;
+    const s = videoSource(v.url);
+    if (s && s.type === 'video' && !warmed.has(v.url)) {
+      const el = document.createElement('video'); el.preload = 'metadata'; el.muted = true; el.src = s.src; warmed.set(v.url, el);
+    }
+  }
+
+  function stopStage() {
+    const v = vstage.querySelector('video');
+    if (v) { v.pause(); v.removeAttribute('src'); v.load(); }
+    vstage.innerHTML = '';
+  }
+
+  function playVideo(i) {
+    const t = vState.tool, v = t.videos[i];
+    vState.i = i; stopStage();
+    $('vtitle').textContent = v.title || t.name;
+    $('vtool').textContent = t.name + (t.videos.length > 1 ? ` · ${i + 1}/${t.videos.length}` : '');
+    [...$('vlist').children].forEach((b, k) => b.classList.toggle('on', k === i));
+    const s = videoSource(v.url);
+    if (!s) { vstage.innerHTML = '<p class="verr">Lien vidéo invalide.</p>'; return; }
+    if (s.type === 'iframe') {
+      const f = document.createElement('iframe');
+      f.src = s.src; f.title = v.title || t.name; f.allowFullscreen = true;
+      f.allow = 'autoplay; fullscreen; picture-in-picture'; f.referrerPolicy = 'strict-origin-when-cross-origin';
+      vstage.appendChild(f); return;
+    }
+    const el = document.createElement('video');
+    el.controls = true; el.autoplay = true; el.playsInline = true; el.preload = 'auto';
+    if (v.poster) el.poster = v.poster;
+    el.src = s.src;
+    el.addEventListener('ended', () => { if (vState && vState.i < t.videos.length - 1) playVideo(vState.i + 1); });
+    el.addEventListener('error', () => {
+      vstage.innerHTML = '';
+      const p = document.createElement('p'); p.className = 'verr'; p.textContent = 'Impossible de lire cette vidéo ici. ';
+      const a = document.createElement('a'); a.href = s.src; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Ouvrir dans un nouvel onglet';
+      p.appendChild(a); vstage.appendChild(p);
+    });
+    vstage.appendChild(el);
+    el.play().catch(() => {});                  // si le navigateur refuse l'autoplay, le bouton lecture reste là
+  }
+
+  function openVideos(id, i, opener) {
+    const t = findTool(id); if (!t || !t.videos || !t.videos.length) return;
+    vState = { tool: t, i: 0 }; vOpener = opener || null;
+    const list = $('vlist'); list.innerHTML = '';
+    if (t.videos.length > 1) t.videos.forEach((v, k) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = `${k + 1} · ${v.title || 'Vidéo ' + (k + 1)}`;
+      b.addEventListener('click', () => playVideo(k)); list.appendChild(b);
+    });
+    vmodal.hidden = false; document.body.style.overflow = 'hidden';
+    playVideo(i || 0);
+    $('vclose').focus({ preventScroll: true });
+  }
+  function closeVideos() {
+    stopStage(); vmodal.hidden = true; document.body.style.overflow = ''; vState = null;
+    if (vOpener && document.contains(vOpener)) vOpener.focus({ preventScroll: true });
+    vOpener = null;
+  }
+  $('vclose').addEventListener('click', closeVideos);
+  vmodal.addEventListener('pointerdown', e => { if (e.target === vmodal) closeVideos(); });
+  grid.addEventListener('click', e => {
+    const b = e.target.closest('.vid-link'); if (!b) return;
+    e.preventDefault(); openVideos(b.dataset.vid, 0, b);
+  });
+  grid.addEventListener('pointerover', e => {
+    const b = e.target.closest && e.target.closest('.vid-link'); if (b) warm(findTool(b.dataset.vid));
+  });
 
   // ── Démarrage ───────────────────────────────────────────────────
 
