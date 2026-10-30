@@ -345,7 +345,7 @@
     if (b.error) { if (!refresh.warned) { refresh.warned = true; toast('Vidéos indisponibles : exécute supabase-videos.sql dans Supabase.'); } }
     else (b.data || []).forEach(v => (videos[v.tool_id] = videos[v.tool_id] || []).push(v));
     render();
-    if (vTool && $('vdlg').open) { vTool = tools.find(t => t.id === vTool.id) || vTool; renderVideos(); }
+    if (vTool && $('#vdlg').open) { vTool = tools.find(t => t.id === vTool.id) || vTool; renderVideos(); }
   }
 
   function status(t) {
@@ -581,16 +581,16 @@
 
   function openVideoDlg(t) {
     vTool = t;
-    $('vdTitle').textContent = 'Vidéos · ' + t.name;
-    $('vForm').reset(); $('vMsg').textContent = '';
+    $('#vdTitle').textContent = 'Vidéos · ' + t.name;
+    $('#vForm').reset(); $('#vMsg').textContent = '';
     renderVideos();
-    $('vdlg').showModal();
+    $('#vdlg').showModal();
   }
-  $('vClose').addEventListener('click', () => $('vdlg').close());
+  $('#vClose').addEventListener('click', () => $('#vdlg').close());
 
   function renderVideos() {
     const list = videos[vTool.id] || [];
-    $('vdList').innerHTML = list.length ? list.map((v, i) => `
+    $('#vdList').innerHTML = list.length ? list.map((v, i) => `
       <div class="vrow" data-id="${esc(v.id)}">
         <div class="vposter">${v.poster ? `<img src="${esc(v.poster)}" alt="" />` : '▶'}</div>
         <div class="info"><b>${esc(v.title)}</b><span class="u">${esc(fmtDur(v.duration_s))} · ${esc(v.url)}</span></div>
@@ -602,7 +602,7 @@
       </div>`).join('') : '<div class="empty">Aucune vidéo pour cet outil.</div>';
   }
 
-  $('vdList').addEventListener('click', async e => {
+  $('#vdList').addEventListener('click', async e => {
     const b = e.target.closest('button[data-a]'); if (!b) return;
     const list = videos[vTool.id] || [], id = b.closest('.vrow').dataset.id;
     const i = list.findIndex(v => v.id === id), v = list[i];
@@ -621,10 +621,10 @@
     await Promise.all(jobs); refresh();
   });
 
-  $('vForm').addEventListener('submit', async e => {
+  $('#vForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const msg = $('vMsg'), btn = $('vAdd'); msg.textContent = '';
-    const title = $('v_title').value.trim(), file = $('v_file').files[0], link = $('v_url').value.trim();
+    const msg = $('#vMsg'), btn = $('#vAdd'); msg.textContent = '';
+    const title = $('#v_title').value.trim(), file = $('#v_file').files[0], link = $('#v_url').value.trim();
     if (!file && !link) { msg.textContent = 'Choisis un fichier ou colle un lien.'; return; }
     if (file && link) { msg.textContent = 'Un fichier OU un lien, pas les deux.'; return; }
     btn.disabled = true;
@@ -655,7 +655,7 @@
       const position = list.length ? Math.max(...list.map(v => v.position)) + 1 : 0;
       const { error } = await sb.from('tool_videos').insert({ tool_id: vTool.id, title, url, poster, duration_s: duration, position });
       if (error) throw error;
-      $('vForm').reset(); toast('Vidéo ajoutée.'); await refresh();
+      $('#vForm').reset(); toast('Vidéo ajoutée.'); await refresh();
     } catch (err) {
       msg.textContent = err.message || 'Envoi impossible.';
     } finally {
