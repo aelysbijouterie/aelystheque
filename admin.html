@@ -190,18 +190,18 @@
 <dialog id="vdlg">
   <div class="vbox">
     <h3 id="vdTitle">Vidéos</h3>
-    <div class="hint">Présentation / tutos : 3 minutes maximum chacune. Elles s’ouvrent dans une fenêtre sur la page d’accueil, sous l’outil.</div>
+    <div class="hint">Présentation / tutos : 30 minutes maximum chacune. Elles s’ouvrent dans une fenêtre sur la page d’accueil, sous l’outil.</div>
     <div id="vdList"></div>
     <form id="vForm">
       <label for="v_title">Titre de la vidéo</label>
       <input id="v_title" type="text" maxlength="60" placeholder="Présentation, Tuto : faire une recherche…" required />
-      <label for="v_file">Fichier vidéo (MP4 ou WebM · 3 min · 50 Mo max)</label>
+      <label for="v_file">Fichier vidéo (MP4 ou WebM · 30 min · 500 Mo max)</label>
       <input id="v_file" type="file" accept="video/mp4,video/webm" />
       <label for="v_url">… ou un lien (YouTube, Vimeo, Loom, fichier MP4)</label>
       <input id="v_url" type="url" placeholder="https://…" />
       <div class="hint">Pour un démarrage instantané : MP4 H.264 en 720p, « optimisé web ».
         <span class="code">ffmpeg -i entree.mp4 -vf scale=-2:720 -c:v libx264 -crf 24 -c:a aac -movflags +faststart sortie.mp4</span>
-        (ou HandBrake, preset « Fast 720p30 », case « Optimisé pour le web »). Résultat : environ 15 à 25 Mo pour 3 min.</div>
+        (ou HandBrake, preset « Fast 720p30 », case « Optimisé pour le web »). Résultat : environ 5 à 8 Mo par minute.</div>
       <div class="msg" id="vMsg" role="alert"></div>
       <div class="foot">
         <button type="button" class="btn" id="vClose">Fermer</button>
@@ -523,7 +523,7 @@
 
   // ── Vidéos d'un outil ───────────────────────────────────────────
 
-  const MAX_SECONDS = 180, MAX_BYTES = 50 * 1024 * 1024;
+  const MAX_SECONDS = 1800, MAX_BYTES = 500 * 1024 * 1024;
   const fmtDur = sec => sec == null ? 'lien externe' : `${Math.floor(sec / 60)}:${pad(sec % 60)}`;
 
   function storagePath(url) {
@@ -633,10 +633,10 @@
     try {
       let url = link, poster = null, duration = null;
       if (file) {
-        if (file.size > MAX_BYTES) throw new Error(`Fichier trop lourd (${(file.size / 1048576).toFixed(0)} Mo, 50 Mo max). Compresse-le avec la commande ci-dessous.`);
+        if (file.size > MAX_BYTES) throw new Error(`Fichier trop lourd (${(file.size / 1048576).toFixed(0)} Mo, 500 Mo max). Compresse-le avec la commande ci-dessous, ou mets-le sur YouTube (non répertorié) et colle le lien.`);
         btn.textContent = 'Analyse…';
         const info = await probeVideo(file);
-        if (info.duration > MAX_SECONDS + 0.5) throw new Error(`Vidéo trop longue (${fmtDur(Math.round(info.duration))}). 3 minutes maximum : raccourcis-la.`);
+        if (info.duration > MAX_SECONDS + 0.5) throw new Error(`Vidéo trop longue (${fmtDur(Math.round(info.duration))}). 30 minutes maximum : raccourcis-la.`);
         duration = Math.round(info.duration);
         if (!(await isFastStart(file)) &&
             !confirm('Cette vidéo n’est pas « optimisée web » : elle peut mettre plusieurs secondes à démarrer.\n\nPour un démarrage instantané, ré-exporte-la avec la commande affichée sous le formulaire.\n\nL’envoyer quand même ?'))
