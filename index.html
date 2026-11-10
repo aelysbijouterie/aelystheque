@@ -273,7 +273,8 @@
   .vclose:hover { background: rgba(20,14,8,.75); }
 
   /* ── Onglet « Tutos » + bibliothèque ─────────────────────────── */
-  .libbtn { position: fixed; top: 28px; right: 28px; z-index: 6; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  .topbtns { position: fixed; top: 28px; right: 28px; z-index: 6; display: flex; gap: 10px; align-items: center; }
+  .libbtn { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
     padding: 10px 14px 10px 16px; border-radius: 999px; color: var(--ink);
     font: 500 .82rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; transition: transform .15s ease; }
   .libbtn:hover { transform: translateY(-1px); }
@@ -319,7 +320,37 @@
   .vcard:hover .vplay svg { fill: #fff; }
   .vct { margin: 9px 2px 0; font-size: .86rem; font-weight: 600; line-height: 1.25; }
   .vcs { margin: 2px 2px 0; font-size: .72rem; color: var(--ink-soft); }
-  @media (max-width: 640px) { .libbtn { top: 14px; right: 14px; } .lib { border-radius: 0; } }
+  @media (max-width: 640px) { .topbtns { top: 14px; right: 14px; } .lib { border-radius: 0; } }
+
+  /* ── Onglet « Accès » : identifiants par magasin ─────────────── */
+  .credgate { margin-top: 18px; display: flex; flex-direction: column; gap: 12px; max-width: 360px; }
+  .credgate .cin { width: 100%; padding: 12px 18px; border-radius: 999px; border: 1px solid var(--glass-edge); background: rgba(255,255,255,.7);
+    font: 400 .95rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; color: var(--ink); outline: none; }
+  .credgate .cin:focus { box-shadow: 0 0 0 3px rgba(168,123,39,.25); }
+  .cbtn { all: unset; box-sizing: border-box; cursor: pointer; padding: 10px 20px; border-radius: 999px; text-align: center; color: #fff;
+    font: 600 .85rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; background: linear-gradient(180deg, #EBC06A, #A87B27); }
+  .cbtn:disabled { opacity: .6; cursor: default; }
+  .cbtn:focus-visible, .cmini:focus-visible, .clink:focus-visible { outline: 2px solid rgba(47,37,25,.55); outline-offset: 2px; }
+  .cerr { min-height: 1.2em; font-size: .8rem; color: #B3402F; }
+  .cnote { font-size: .72rem; color: var(--ink-soft); line-height: 1.45; }
+  .clink { all: unset; cursor: pointer; font-size: .76rem; color: var(--ink-soft); text-decoration: underline; }
+  .credtop { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .credtop b { font-size: .86rem; }
+  .clist { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+  .ccard { padding: 14px 16px; border-radius: 18px; background: rgba(255,255,255,.62); border: 1px solid var(--glass-edge); }
+  .chead { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .cicon { flex: none; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+    font-size: 1.1rem; background: var(--tile-bg, linear-gradient(155deg, #223354, #0d1a2e)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.3); }
+  .cicon img { width: 100%; height: 100%; object-fit: cover; }
+  .chead .cname { flex: 1; min-width: 0; font-weight: 600; font-size: .95rem; }
+  .copen { font-size: .72rem; color: #A87B27; text-decoration: none; font-weight: 600; }
+  .crow { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid rgba(47,37,25,.08); }
+  .crow .k { flex: none; width: 92px; font-size: .72rem; color: var(--ink-soft); }
+  .crow .v { flex: 1; min-width: 0; font: 500 .88rem ui-monospace, 'SF Mono', Consolas, monospace; word-break: break-all; }
+  .cmini { all: unset; box-sizing: border-box; cursor: pointer; flex: none; padding: 4px 10px; border-radius: 999px; font-size: .7rem; font-weight: 600;
+    background: rgba(255,255,255,.7); border: 1px solid var(--glass-edge); color: var(--ink); }
+  .cmini:hover { background: #A87B27; color: #fff; }
+  .cnotetxt { margin-top: 6px; font-size: .74rem; color: var(--ink-soft); }
 
   /* ── Pied ────────────────────────────────────────────────────── */
   footer { position: fixed; left: 18px; bottom: 24px; z-index: 9; display: flex; align-items: center; gap: 10px;
@@ -354,10 +385,16 @@
 <div class="wallpaper" id="wall" aria-hidden="true"></div>
 <div class="flash" id="flash" aria-hidden="true"></div>
 
-<button class="libbtn glass" id="libBtn" type="button" aria-expanded="false" aria-controls="lib" hidden>
-  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M10 8.5v7l6-3.5z"/></svg>
-  Tutos <span class="libcount" id="libCount">0</span>
-</button>
+<div class="topbtns">
+  <button class="libbtn glass" id="credBtn" type="button" aria-expanded="false" aria-controls="cred">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8 20 3m-3 3 3 3m-6-0 2 2"/></svg>
+    Accès
+  </button>
+  <button class="libbtn glass" id="libBtn" type="button" aria-expanded="false" aria-controls="lib" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M10 8.5v7l6-3.5z"/></svg>
+    Tutos <span class="libcount" id="libCount">0</span>
+  </button>
+</div>
 
 <aside class="widget glass" id="widget" aria-label="Heure">
   <div class="wd-top">
@@ -416,6 +453,25 @@
   <input class="libsearch" id="libSearch" type="search" placeholder="Rechercher un tuto" autocomplete="off" aria-label="Rechercher un tuto" />
   <div class="chips" id="libChips"></div>
   <div class="libgrid" id="libGrid"></div>
+</aside>
+
+<div class="libback" id="credBack"></div>
+<aside class="lib glass" id="cred" aria-label="Identifiants par magasin" aria-hidden="true" inert>
+  <div class="libhead">
+    <div><h2>Identifiants</h2><p id="credSub">Les accès aux applis de ton magasin.</p></div>
+    <button class="libclose" id="credClose" type="button" aria-label="Fermer">×</button>
+  </div>
+  <form class="credgate" id="credGate" autocomplete="off">
+    <input class="cin" id="credCode" type="password" placeholder="Code du magasin" aria-label="Code du magasin" autocomplete="off" />
+    <button class="cbtn" id="credGo" type="submit">Afficher mes identifiants</button>
+    <div class="cerr" id="credErr" role="alert"></div>
+    <div class="cnote">Le code de ton magasin t’a été donné par la direction. Seuls les identifiants de ton magasin s’affichent.</div>
+  </form>
+  <div id="credView" hidden>
+    <div class="credtop"><b id="credStore"></b><button class="clink" id="credLock" type="button">Verrouiller</button></div>
+    <input class="libsearch" id="credSearch" type="search" placeholder="Rechercher une appli" autocomplete="off" aria-label="Rechercher une appli" />
+    <div class="clist" id="credList"></div>
+  </div>
 </aside>
 
 <div class="vmodal" id="vmodal" role="dialog" aria-modal="true" aria-label="Vidéo" hidden>
@@ -750,7 +806,7 @@
   searchEl.addEventListener('input', renderGrid);
   document.addEventListener('keydown', e => {
     const typing = /^(input|textarea)$/i.test((e.target.tagName || ''));
-    if (e.key === 'Escape') { if (!vmodal.hidden) { closeVideos(); return; } if (lib.classList.contains('open')) { closeLib(); return; } if (!ctx.hidden) closeCtx(); return; }
+    if (e.key === 'Escape') { if (!vmodal.hidden) { closeVideos(); return; } if (lib.classList.contains('open')) { closeLib(); return; } if ($('cred').classList.contains('open')) { closeCred(); return; } if (!ctx.hidden) closeCtx(); return; }
     if ((e.key === '/' && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
       e.preventDefault(); searchEl.focus(); searchEl.select();
     }
@@ -935,6 +991,111 @@
   });
   $('libGrid').addEventListener('pointerover', e => {
     const c = e.target.closest && e.target.closest('.vcard'); if (c) warm(libList[Number(c.dataset.i)]);
+  });
+
+  // ── Onglet « Accès » : identifiants par magasin ─────────────────
+  // Rien n'est stocké dans la page : le serveur ne renvoie que les identifiants du magasin dont on donne le code.
+
+  const credEl = $('cred'), credBack = $('credBack');
+  let credData = null, credCode = null;
+  const CRED_KEY = 'aelytheque.cred.v1';          // sessionStorage : s'efface à la fermeture de l'onglet
+
+  async function fetchCreds(code) {
+    const r = await fetch(`${CFG.supabaseUrl}/rest/v1/rpc/get_credentials`, {
+      method: 'POST',
+      headers: { apikey: CFG.supabaseAnonKey, Authorization: `Bearer ${CFG.supabaseAnonKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_code: code })
+    });
+    if (r.status === 404) throw new Error('Service pas encore activé (le SQL des identifiants n’a pas été lancé).');
+    if (!r.ok) { let m = ''; try { m = (await r.json()).message || ''; } catch (e) {} throw new Error(m || 'Service indisponible, réessaie.'); }
+    return r.json();
+  }
+  function showCredView() {
+    $('credGate').hidden = true; $('credView').hidden = false;
+    $('credStore').textContent = '🏬 ' + credData.store;
+    $('credSub').textContent = 'Les accès aux applis de ton magasin.';
+    renderCred();
+  }
+  function showCredGate() {
+    credData = null; credCode = null;
+    try { sessionStorage.removeItem(CRED_KEY); } catch (e) {}
+    $('credView').hidden = true; $('credGate').hidden = false;
+    $('credCode').value = ''; $('credErr').textContent = ''; $('credList').innerHTML = ''; $('credSearch').value = '';
+    $('credSub').textContent = 'Entre le code de ton magasin.';
+  }
+  function renderCred() {
+    if (!credData) return;
+    const q = $('credSearch').value.trim().toLowerCase();
+    const items = credData.items.filter(c => !q || (c.app || '').toLowerCase().includes(q));
+    $('credList').innerHTML = items.length ? items.map((c, i) => {
+      const t = c.tool_id ? findTool(c.tool_id) : null;
+      const bg = t ? tileBackground(t.color) : '';
+      const ic = t && t.image ? `<img src="${escapeHtml(t.image)}" alt="" draggable="false" />` : escapeHtml((t && t.icon) || '🔑');
+      const open = t && t.url ? `<a class="copen" href="${escapeHtml(t.url)}" target="_blank" rel="noopener">Ouvrir ↗</a>` : '';
+      const row = (k, v, kind) => v ? `<div class="crow"><span class="k">${k}</span><span class="v" data-kind="${kind}">${kind === 'pw' ? '••••••••' : escapeHtml(v)}</span>
+          ${kind === 'pw' ? '<button class="cmini" type="button" data-a="eye">Afficher</button>' : ''}<button class="cmini" type="button" data-a="copy">Copier</button></div>` : '';
+      return `<div class="ccard" data-i="${credData.items.indexOf(c)}">
+        <div class="chead"><div class="cicon"${bg ? ` style="--tile-bg:${escapeHtml(bg)}"` : ''}>${ic}</div><div class="cname">${escapeHtml(c.app)}</div>${open}</div>
+        ${row('Identifiant', c.login, 'login')}${row('Mot de passe', c.password, 'pw')}
+        ${c.note ? `<div class="cnotetxt">${escapeHtml(c.note)}</div>` : ''}
+      </div>`;
+    }).join('') : `<p class="empty">${q ? 'Aucune appli trouvée.' : 'Aucun identifiant pour ce magasin pour le moment.'}</p>`;
+  }
+  function copyText(txt) {
+    const done = () => toast('Copié');
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, () => fallbackCopy(txt, done));
+    else fallbackCopy(txt, done);
+  }
+  function fallbackCopy(txt, done) {
+    const ta = document.createElement('textarea'); ta.value = txt; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) { toast('Copie impossible : sélectionne le texte à la main.'); }
+    ta.remove();
+  }
+  async function openCred() {
+    credEl.inert = false; credEl.setAttribute('aria-hidden', 'false');
+    credEl.classList.add('open'); credBack.classList.add('open'); $('credBtn').setAttribute('aria-expanded', 'true');
+    if (!credData) {
+      let saved = null; try { saved = sessionStorage.getItem(CRED_KEY); } catch (e) {}
+      if (saved) {                                  // déjà déverrouillé dans cet onglet
+        try { const d = await fetchCreds(saved); if (d) { credData = d; credCode = saved; showCredView(); return; } } catch (e) {}
+        showCredGate();
+      }
+      $('credCode').focus({ preventScroll: true });
+    } else $('credClose').focus({ preventScroll: true });
+  }
+  function closeCred() {
+    credEl.classList.remove('open'); credBack.classList.remove('open'); $('credBtn').setAttribute('aria-expanded', 'false');
+    credEl.inert = true; credEl.setAttribute('aria-hidden', 'true');
+    $('credBtn').focus({ preventScroll: true });
+  }
+  $('credBtn').addEventListener('click', () => credEl.classList.contains('open') ? closeCred() : openCred());
+  $('credClose').addEventListener('click', closeCred);
+  credBack.addEventListener('pointerdown', closeCred);
+  $('credLock').addEventListener('click', () => { showCredGate(); $('credCode').focus({ preventScroll: true }); });
+  $('credSearch').addEventListener('input', renderCred);
+  $('credGate').addEventListener('submit', async e => {
+    e.preventDefault();
+    const code = $('credCode').value.trim(), btn = $('credGo'), err = $('credErr'); err.textContent = '';
+    if (!code) { err.textContent = 'Entre le code de ton magasin.'; return; }
+    btn.disabled = true; btn.textContent = 'Vérification…';
+    try {
+      const d = await fetchCreds(code);
+      if (!d) { err.textContent = 'Code incorrect.'; $('credCode').select(); return; }
+      credData = d; credCode = code;
+      try { sessionStorage.setItem(CRED_KEY, code); } catch (e2) {}
+      $('credCode').value = ''; showCredView();
+    } catch (e2) { err.textContent = e2.message; }
+    finally { btn.disabled = false; btn.textContent = 'Afficher mes identifiants'; }
+  });
+  $('credList').addEventListener('click', e => {
+    const b = e.target.closest('button[data-a]'); if (!b || !credData) return;
+    const card = b.closest('.ccard'), c = credData.items[Number(card.dataset.i)], row = b.closest('.crow'), v = row.querySelector('.v');
+    if (b.dataset.a === 'copy') copyText(v.dataset.kind === 'pw' ? c.password : c.login);
+    else if (b.dataset.a === 'eye') {
+      const shown = v.dataset.shown === '1';
+      v.textContent = shown ? '••••••••' : c.password; v.dataset.shown = shown ? '0' : '1'; b.textContent = shown ? 'Afficher' : 'Masquer';
+    }
   });
 
   // ── Démarrage ───────────────────────────────────────────────────

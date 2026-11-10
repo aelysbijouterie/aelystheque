@@ -106,7 +106,19 @@
   .code { display: block; margin-top: 6px; padding: 8px 10px; border-radius: 8px; background: #f1ebe3; font: 400 .7rem ui-monospace, Consolas, monospace; color: var(--text); word-break: break-all; user-select: all; }
   input[type=file] { font: 400 .84rem 'DM Sans', sans-serif; max-width: 100%; }
 
+  dialog#cdlg { width: min(880px, calc(100vw - 24px)); max-height: calc(100vh - 24px); }
+  dialog#cdlg h4 { margin: 22px 0 6px; font-family: 'Playfair Display', serif; color: var(--navy); font-size: 1rem; }
+  .ctools { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+  .cform { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 10px; margin-top: 10px; padding: 12px; border: 1px dashed var(--sand); border-radius: 12px; }
+  .cform .wide { grid-column: 1 / -1; }
+  .cform label { margin: 2px 0 3px; }
+  .cform .foot { grid-column: 1 / -1; margin-top: 6px; }
+  select { width: 100%; font: 400 .9rem 'DM Sans', sans-serif; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--sand); background: var(--cream); color: var(--text); }
+  .cform input[type=text] { font-size: .86rem; }
+  .vrow .badge { margin: 0 0 0 6px; }
+  .pw { font-family: ui-monospace, Consolas, monospace; }
   @media (max-width: 560px) {
+    .cform { grid-template-columns: 1fr; }
     .row { flex-wrap: wrap; }
     .actions { max-width: none; justify-content: flex-start; width: 100%; }
   }
@@ -139,7 +151,7 @@
   <section id="app" hidden>
     <div class="bar">
       <h2>Outils</h2>
-      <div style="display:flex; gap:8px; flex-wrap:wrap"><button class="btn" id="genBtn">▶ Tutos généraux</button><button class="btn primary" id="addBtn">+ Ajouter un outil</button></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap"><button class="btn" id="genBtn">▶ Tutos généraux</button><button class="btn" id="credBtnA">🔑 Identifiants</button><button class="btn primary" id="addBtn">+ Ajouter un outil</button></div>
     </div>
     <div id="list"></div>
   </section>
@@ -222,9 +234,46 @@
   </div>
 </dialog>
 
+<dialog id="cdlg">
+  <div class="vbox">
+    <h3>Identifiants des applis</h3>
+    <div class="hint">Ce que les magasins voient dans l’onglet « Accès » : chaque magasin tape son code et ne voit que ses identifiants, plus ceux communs à tous les magasins.</div>
+    <div class="ctools">
+      <button type="button" class="btn sm" id="cExport">⬇ Exporter en Excel</button>
+      <button type="button" class="btn sm" id="cImportBtn">⬆ Importer un Excel</button>
+      <button type="button" class="btn sm" id="cTemplate">Modèle vide</button>
+      <input type="file" id="cImport" accept=".xlsx,.xls,.csv" hidden />
+    </div>
+    <div class="msg" id="cMsg" role="alert"></div>
+
+    <h4>Magasins <span style="font-weight:400;font-size:.76rem;color:var(--text-muted)">· un code d’accès par magasin</span></h4>
+    <div id="sList"></div>
+    <form id="sForm" class="cform" autocomplete="off">
+      <div><label for="s_name">Nom du magasin</label><input id="s_name" type="text" maxlength="60" required /></div>
+      <div><label for="s_code">Code d’accès</label><input id="s_code" type="text" maxlength="60" required autocomplete="off" /></div>
+      <div class="foot"><button type="button" class="btn sm" id="sCancel" hidden>Annuler</button><button type="submit" class="btn sm primary" id="sAdd">Ajouter le magasin</button></div>
+    </form>
+
+    <h4>Identifiants</h4>
+    <select id="cFilter" aria-label="Filtrer par magasin"></select>
+    <div id="cList"></div>
+    <form id="cForm" class="cform" autocomplete="off">
+      <div class="wide"><label for="c_store">Pour quel magasin ?</label><select id="c_store"></select></div>
+      <div><label for="c_app">Application</label><input id="c_app" type="text" maxlength="60" list="c_apps" required /><datalist id="c_apps"></datalist></div>
+      <div><label for="c_login">Identifiant</label><input id="c_login" type="text" maxlength="120" autocomplete="off" /></div>
+      <div><label for="c_pw">Mot de passe</label><input id="c_pw" type="text" maxlength="120" autocomplete="off" /></div>
+      <div><label for="c_note">Note (facultatif)</label><input id="c_note" type="text" maxlength="160" /></div>
+      <div class="foot"><button type="button" class="btn sm" id="cCancel" hidden>Annuler</button><button type="submit" class="btn sm primary" id="cAdd">Ajouter l’identifiant</button></div>
+    </form>
+
+    <div class="foot"><button type="button" class="btn" id="cClose">Fermer</button></div>
+  </div>
+</dialog>
+
 <div id="toast" role="status"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="config.js"></script>
 <script>
 (function () {
@@ -694,6 +743,179 @@
     } finally {
       btn.disabled = false; btn.textContent = 'Ajouter';
     }
+  });
+
+  // ── Identifiants par magasin + Excel ────────────────────────────
+
+  let stores = [], creds = [], editStore = null, editCred = null;
+  const cMsg = (t, ok) => { const m = $('#cMsg'); m.textContent = t || ''; m.style.color = ok ? 'var(--ok)' : 'var(--danger)'; };
+  const storeName = id => id ? ((stores.find(x => x.id === id) || {}).name || '?') : 'Tous les magasins';
+  const dupMsg = err => /duplicate|unique|23505/i.test((err && (err.code + ' ' + err.message)) || '') ? 'Ce nom de magasin ou ce code existe déjà.' : (err.message || 'Erreur');
+
+  async function loadCreds() {
+    const [a, b] = await Promise.all([
+      sb.from('stores').select('*').order('name'),
+      sb.from('credentials').select('*').order('position').order('created_at')
+    ]);
+    if (a.error || b.error) {
+      stores = []; creds = [];
+      cMsg('Tables absentes : lance supabase-identifiants.sql dans Supabase (SQL Editor). Détail : ' + (a.error || b.error).message);
+    } else { stores = a.data; creds = b.data; cMsg(''); }
+    renderCreds();
+  }
+
+  function renderCreds() {
+    $('#sList').innerHTML = stores.length ? stores.map(st => `
+      <div class="vrow" data-id="${esc(st.id)}">
+        <div class="info"><b>🏬 ${esc(st.name)}</b><span class="u">Code : <span class="pw">${esc(st.code)}</span> · ${creds.filter(c => c.store_id === st.id).length} identifiant(s) propre(s)</span></div>
+        <div class="actions"><button class="btn sm" data-a="sedit">Modifier</button><button class="btn sm danger" data-a="sdel">Supprimer</button></div>
+      </div>`).join('') : '<div class="empty">Aucun magasin. Ajoute le premier ci-dessous.</div>';
+
+    const opts = '<option value="">Tous les magasins (commun)</option>' + stores.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');
+    const keepF = $('#cFilter').value || 'all', keepS = $('#c_store').value;
+    $('#cFilter').innerHTML = '<option value="all">Tout afficher</option>' + opts.replace('Tous les magasins (commun)', 'Communs à tous les magasins');
+    $('#cFilter').value = [...$('#cFilter').options].some(o => o.value === keepF) ? keepF : 'all';
+    $('#c_store').innerHTML = opts; $('#c_store').value = [...$('#c_store').options].some(o => o.value === keepS) ? keepS : '';
+    $('#c_apps').innerHTML = [...new Set(tools.map(t => t.name))].map(n => `<option value="${esc(n)}">`).join('');
+
+    const f = $('#cFilter').value;
+    const list = creds.filter(c => f === 'all' || (f === '' ? !c.store_id : c.store_id === f));
+    $('#cList').innerHTML = list.length ? list.map(c => `
+      <div class="vrow" data-id="${esc(c.id)}">
+        <div class="info"><b>${esc(c.app)}<span class="badge ${c.store_id ? 'warn' : 'ok'}">${esc(storeName(c.store_id))}</span></b>
+          <span class="u"><span class="pw">${esc(c.login)}</span> · <span class="pw">${esc(c.password)}</span>${c.note ? ' · ' + esc(c.note) : ''}</span></div>
+        <div class="actions"><button class="btn sm" data-a="cedit">Modifier</button><button class="btn sm danger" data-a="cdel">Supprimer</button></div>
+      </div>`).join('') : '<div class="empty">Aucun identifiant ici.</div>';
+  }
+
+  $('#credBtnA').addEventListener('click', async () => { $('#cdlg').showModal(); await loadCreds(); });
+  $('#cClose').addEventListener('click', () => $('#cdlg').close());
+  $('#cFilter').addEventListener('change', renderCreds);
+
+  function resetStoreForm() { editStore = null; $('#sForm').reset(); $('#sAdd').textContent = 'Ajouter le magasin'; $('#sCancel').hidden = true; }
+  function resetCredForm() { editCred = null; const keep = $('#c_store').value; $('#cForm').reset(); $('#c_store').value = keep; $('#cAdd').textContent = 'Ajouter l’identifiant'; $('#cCancel').hidden = true; }
+  $('#sCancel').addEventListener('click', resetStoreForm);
+  $('#cCancel').addEventListener('click', resetCredForm);
+
+  $('#sList').addEventListener('click', async e => {
+    const b = e.target.closest('button[data-a]'); if (!b) return;
+    const st = stores.find(x => x.id === b.closest('.vrow').dataset.id); if (!st) return;
+    if (b.dataset.a === 'sedit') {
+      editStore = st.id; $('#s_name').value = st.name; $('#s_code').value = st.code;
+      $('#sAdd').textContent = 'Enregistrer'; $('#sCancel').hidden = false; $('#s_name').focus(); return;
+    }
+    const n = creds.filter(c => c.store_id === st.id).length;
+    if (!confirm(`Supprimer le magasin « ${st.name} » ?\n${n} identifiant(s) propre(s) à ce magasin seront aussi supprimés.`)) return;
+    const { error } = await sb.from('stores').delete().eq('id', st.id);
+    if (error) return cMsg(error.message);
+    toast('Magasin supprimé.'); resetStoreForm(); loadCreds();
+  });
+  $('#sForm').addEventListener('submit', async e => {
+    e.preventDefault(); cMsg('');
+    const row = { name: $('#s_name').value.trim(), code: $('#s_code').value.trim() };
+    if (!row.name || !row.code) return;
+    const { error } = editStore ? await sb.from('stores').update(row).eq('id', editStore) : await sb.from('stores').insert(row);
+    if (error) return cMsg(dupMsg(error));
+    toast(editStore ? 'Magasin enregistré.' : 'Magasin ajouté.'); resetStoreForm(); loadCreds();
+  });
+
+  const toolIdFor = app => { const t = tools.find(x => x.name.trim().toLowerCase() === app.trim().toLowerCase()); return t ? t.id : null; };
+
+  $('#cList').addEventListener('click', async e => {
+    const b = e.target.closest('button[data-a]'); if (!b) return;
+    const c = creds.find(x => x.id === b.closest('.vrow').dataset.id); if (!c) return;
+    if (b.dataset.a === 'cedit') {
+      editCred = c.id; $('#c_store').value = c.store_id || ''; $('#c_app').value = c.app; $('#c_login').value = c.login; $('#c_pw').value = c.password; $('#c_note').value = c.note || '';
+      $('#cAdd').textContent = 'Enregistrer'; $('#cCancel').hidden = false; $('#c_app').focus(); return;
+    }
+    if (!confirm(`Supprimer l’identifiant « ${c.app} » (${storeName(c.store_id)}) ?`)) return;
+    const { error } = await sb.from('credentials').delete().eq('id', c.id);
+    if (error) return cMsg(error.message);
+    toast('Identifiant supprimé.'); resetCredForm(); loadCreds();
+  });
+  $('#cForm').addEventListener('submit', async e => {
+    e.preventDefault(); cMsg('');
+    const app = $('#c_app').value.trim(); if (!app) return;
+    const row = { store_id: $('#c_store').value || null, tool_id: toolIdFor(app), app, login: $('#c_login').value.trim(), password: $('#c_pw').value.trim(), note: $('#c_note').value.trim() || null };
+    let error;
+    if (editCred) ({ error } = await sb.from('credentials').update(row).eq('id', editCred));
+    else { row.position = creds.length ? Math.max(...creds.map(x => x.position)) + 1 : 0; ({ error } = await sb.from('credentials').insert(row)); }
+    if (error) return cMsg(error.message);
+    toast(editCred ? 'Identifiant enregistré.' : 'Identifiant ajouté.'); resetCredForm(); loadCreds();
+  });
+
+  // ── Excel : export / modèle / import ──
+  const norm = v => String(v == null ? '' : v).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const pick = (row, names) => { for (const k of Object.keys(row)) if (names.includes(norm(k))) return String(row[k] == null ? '' : row[k]).trim(); return ''; };
+  const isAll = v => ['', 'tous', 'tout', 'touslesmagasins', 'tousmagasins', 'commun', 'communs', 'all'].includes(norm(v));
+  const needXlsx = () => { if (window.XLSX) return true; cMsg('Le module Excel n’a pas pu se charger (connexion ?). Recharge la page.'); return false; };
+
+  function buildWorkbook(empty) {
+    const X = window.XLSX, wb = X.utils.book_new();
+    const ws1 = X.utils.aoa_to_sheet([['Magasin', 'Application', 'Identifiant', 'Mot de passe', 'Note'],
+      ...(empty ? [] : creds.map(c => [c.store_id ? storeName(c.store_id) : 'Tous', c.app, c.login, c.password, c.note || '']))]);
+    ws1['!cols'] = [{ wch: 22 }, { wch: 26 }, { wch: 24 }, { wch: 24 }, { wch: 36 }];
+    const ws2 = X.utils.aoa_to_sheet([['Magasin', 'Code d’accès'], ...(empty ? [] : stores.map(x => [x.name, x.code]))]);
+    ws2['!cols'] = [{ wch: 28 }, { wch: 24 }];
+    const ws3 = X.utils.aoa_to_sheet([
+      ['Mode d’emploi'],
+      ['1. Feuille « Magasins » : un magasin par ligne, avec son code d’accès (celui que les équipes taperont).'],
+      ['2. Feuille « Identifiants » : une ligne par appli et par magasin.'],
+      ['   • Magasin = « Tous » (ou vide) → l’identifiant est commun à tous les magasins.'],
+      ['   • Magasin = le nom exact d’un magasin → visible seulement par ce magasin.'],
+      ['3. Si le nom de l’application est celui d’un outil de l’Aélythèque, il est relié automatiquement (icône + bouton Ouvrir).'],
+      ['4. Importer ce fichier dans l’admin REMPLACE tous les identifiants actuels (les magasins sont ajoutés / mis à jour).'],
+      ['5. Ce fichier contient des mots de passe : ne l’envoie pas par mail, ne le mets pas sur GitHub.']]);
+    ws3['!cols'] = [{ wch: 110 }];
+    X.utils.book_append_sheet(wb, ws1, 'Identifiants'); X.utils.book_append_sheet(wb, ws2, 'Magasins'); X.utils.book_append_sheet(wb, ws3, 'Mode d’emploi');
+    return wb;
+  }
+  $('#cExport').addEventListener('click', () => { if (!needXlsx()) return; window.XLSX.writeFile(buildWorkbook(false), 'identifiants-aelytheque.xlsx'); toast('Excel exporté.'); });
+  $('#cTemplate').addEventListener('click', () => { if (!needXlsx()) return; window.XLSX.writeFile(buildWorkbook(true), 'modele-identifiants-aelytheque.xlsx'); });
+  $('#cImportBtn').addEventListener('click', () => $('#cImport').click());
+
+  $('#cImport').addEventListener('change', async e => {
+    const file = e.target.files[0]; e.target.value = ''; if (!file || !needXlsx()) return;
+    cMsg('');
+    try {
+      const wb = window.XLSX.read(await file.arrayBuffer(), { type: 'array' });
+      const sheet = key => { const n = wb.SheetNames.find(x => norm(x).startsWith(key)); return n ? window.XLSX.utils.sheet_to_json(wb.Sheets[n], { defval: '', raw: false }) : null; };
+      const sRows = sheet('magasin') || [], cRows = sheet('identifiant');
+      if (!cRows) throw new Error('Feuille « Identifiants » introuvable dans ce fichier.');
+
+      const shS = sRows.map(r => ({ name: pick(r, ['magasin', 'nom', 'boutique']), code: pick(r, ['codedacces', 'code', 'motdepasse', 'mdp', 'password', 'acces']) })).filter(x => x.name);
+      const codes = new Set();
+      for (const x of shS) {
+        if (!x.code) throw new Error(`Le magasin « ${x.name} » n’a pas de code d’accès.`);
+        const k = x.code.toLowerCase(); if (codes.has(k)) throw new Error(`Le code « ${x.code} » est utilisé par deux magasins : chaque magasin doit avoir son propre code.`);
+        codes.add(k);
+      }
+      const known = new Set([...stores.map(x => x.name.trim().toLowerCase()), ...shS.map(x => x.name.trim().toLowerCase())]);
+      const items = [], unknown = new Set();
+      cRows.forEach(r => {
+        const app = pick(r, ['application', 'appli', 'app', 'outil']); if (!app) return;
+        const st = pick(r, ['magasin', 'boutique']), all = isAll(st);
+        if (!all && !known.has(st.trim().toLowerCase())) unknown.add(st);
+        items.push({ st: all ? null : st.trim().toLowerCase(), app, login: pick(r, ['identifiant', 'login', 'idd', 'id', 'utilisateur']), password: pick(r, ['motdepasse', 'mdp', 'password', 'pass']), note: pick(r, ['note', 'commentaire']) || null });
+      });
+      if (unknown.size) throw new Error('Magasin(s) inconnu(s) dans « Identifiants » : ' + [...unknown].join(', ') + '. Ajoute-les dans la feuille « Magasins ».');
+      if (!items.length) throw new Error('Aucun identifiant trouvé dans le fichier.');
+      if (!confirm(`Importer ${shS.length} magasin(s) et ${items.length} identifiant(s) ?\n\nLes ${creds.length} identifiants actuels seront remplacés.`)) return;
+
+      cMsg('Import en cours…', true);
+      for (const x of shS) {
+        const ex = stores.find(y => y.name.trim().toLowerCase() === x.name.trim().toLowerCase());
+        const { error } = ex ? await sb.from('stores').update({ name: x.name, code: x.code }).eq('id', ex.id) : await sb.from('stores').insert({ name: x.name, code: x.code });
+        if (error) throw new Error(`Magasin « ${x.name} » : ${dupMsg(error)}`);
+      }
+      const fresh = await sb.from('stores').select('*'); if (fresh.error) throw fresh.error;
+      const idOf = n => (fresh.data.find(y => y.name.trim().toLowerCase() === n) || {}).id || null;
+      const rows = items.map((x, i) => ({ store_id: x.st ? idOf(x.st) : null, tool_id: toolIdFor(x.app), app: x.app, login: x.login, password: x.password, note: x.note, position: i }));
+      const oldIds = creds.map(c => c.id);
+      for (let i = 0; i < rows.length; i += 200) { const { error } = await sb.from('credentials').insert(rows.slice(i, i + 200)); if (error) throw error; }
+      for (let i = 0; i < oldIds.length; i += 100) { const { error } = await sb.from('credentials').delete().in('id', oldIds.slice(i, i + 100)); if (error) throw error; }
+      await loadCreds(); cMsg(`Import terminé : ${shS.length} magasin(s), ${rows.length} identifiant(s).`, true);
+    } catch (err) { cMsg(err.message || 'Import impossible.'); loadCreds(); }
   });
 
   boot();
