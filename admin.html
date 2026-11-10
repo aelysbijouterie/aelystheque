@@ -90,6 +90,13 @@
   .empty { text-align: center; color: var(--text-muted); padding: 30px 10px; font-size: .88rem; }
 
   dialog .vbox { padding: 22px 24px 20px; }
+  .vdrop { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-align:center;
+    padding:22px 14px; border:2px dashed var(--sand); border-radius:14px; background:var(--cream); cursor:pointer; margin-top:6px; transition:border-color .15s, background .15s; }
+  .vdrop:hover, .vdrop.over { border-color: var(--gold, #C9A24A); background: #fff; }
+  .vdrop b { font-size:.92rem; } .vdrop span { font-size:.74rem; color: var(--text-muted); }
+  .vdrop.has { border-style:solid; }
+  .vor { text-align:center; font-size:.72rem; color: var(--text-muted); margin:10px 0 2px; }
+  details.vtech { margin-top:10px; } details.vtech summary { cursor:pointer; font-size:.74rem; color: var(--text-muted); }
   .vrow { display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid var(--sand); border-radius: 12px; margin: 10px 0; background: var(--cream); }
   .vposter { flex: none; width: 76px; aspect-ratio: 16/9; border-radius: 8px; overflow: hidden; background: #1c2433; color: #fff;
              display: flex; align-items: center; justify-content: center; font-size: .9rem; }
@@ -190,22 +197,26 @@
 <dialog id="vdlg">
   <div class="vbox">
     <h3 id="vdTitle">Vidéos</h3>
-    <div class="hint">Présentation / tutos : 30 minutes maximum chacune. Elles s’ouvrent dans une fenêtre sur la page d’accueil, sous l’outil.</div>
+    <div class="hint">Ajoute une vidéo en choisissant un fichier ou en collant un lien. 30 minutes maximum.</div>
     <div id="vdList"></div>
     <form id="vForm">
-      <label for="v_title">Titre de la vidéo</label>
-      <input id="v_title" type="text" maxlength="60" placeholder="Présentation, Tuto : faire une recherche…" required />
-      <label for="v_file">Fichier vidéo (MP4 ou WebM · 30 min · 500 Mo max)</label>
-      <input id="v_file" type="file" accept="video/mp4,video/webm" />
-      <label for="v_url">… ou un lien (YouTube, Vimeo, Loom, fichier MP4)</label>
-      <input id="v_url" type="url" placeholder="https://…" />
-      <div class="hint">Pour un démarrage instantané : MP4 H.264 en 720p, « optimisé web ».
+      <label class="vdrop" id="vDrop" for="v_file">
+        <b id="vDropT">📁 Choisir ou glisser une vidéo</b>
+        <span id="vDropS">MP4 ou WebM · 30 min · 500 Mo max</span>
+      </label>
+      <input id="v_file" type="file" accept="video/mp4,video/webm" hidden />
+      <div class="vor">— ou —</div>
+      <input id="v_url" type="url" placeholder="🔗 Colle un lien YouTube, Vimeo ou Loom" aria-label="Lien vidéo" />
+      <input id="v_title" type="text" maxlength="60" placeholder="Titre (facultatif : repris du nom du fichier)" aria-label="Titre" style="margin-top:10px" />
+      <details class="vtech"><summary>Conseils pour un démarrage instantané</summary>
+        <div class="hint">MP4 H.264 en 720p, « optimisé web ».
         <span class="code">ffmpeg -i entree.mp4 -vf scale=-2:720 -c:v libx264 -crf 24 -c:a aac -movflags +faststart sortie.mp4</span>
-        (ou HandBrake, preset « Fast 720p30 », case « Optimisé pour le web »). Résultat : environ 5 à 8 Mo par minute.</div>
+        (ou HandBrake, preset « Fast 720p30 », case « Optimisé pour le web »).</div>
+      </details>
       <div class="msg" id="vMsg" role="alert"></div>
       <div class="foot">
         <button type="button" class="btn" id="vClose">Fermer</button>
-        <button type="submit" class="btn primary" id="vAdd">Ajouter la vidéo</button>
+        <button type="submit" class="btn primary" id="vAdd">Ajouter</button>
       </div>
     </form>
   </div>
@@ -623,23 +634,43 @@
     await Promise.all(jobs); refresh();
   });
 
+  // Zone de dépôt : un clic ou un glisser, le titre se remplit tout seul
+  const cleanName = n => n.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim().slice(0, 60);
+  function syncDrop() {
+    const f = $('#v_file').files[0], d = $('#vDrop');
+    d.classList.toggle('has', !!f);
+    $('#vDropT').textContent = f ? '✅ ' + f.name : '📁 Choisir ou glisser une vidéo';
+    $('#vDropS').textContent = f ? (f.size / 1048576).toFixed(1) + ' Mo · clique pour changer' : 'MP4 ou WebM · 30 min · 500 Mo max';
+    if (f) { $('#v_url').value = ''; if (!$('#v_title').value.trim()) $('#v_title').value = cleanName(f.name); }
+  }
+  $('#v_file').addEventListener('change', syncDrop);
+  $('#v_url').addEventListener('input', () => { if ($('#v_url').value) { $('#v_file').value = ''; syncDrop(); } });
+  $('#vForm').addEventListener('reset', () => setTimeout(syncDrop));
+  ['dragenter', 'dragover'].forEach(ev => $('#vDrop').addEventListener(ev, e => { e.preventDefault(); $('#vDrop').classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => $('#vDrop').addEventListener(ev, e => { e.preventDefault(); $('#vDrop').classList.remove('over'); }));
+  $('#vDrop').addEventListener('drop', e => {
+    const f = e.dataTransfer.files[0]; if (!f) return;
+    const dt = new DataTransfer(); dt.items.add(f); $('#v_file').files = dt.files; syncDrop();
+  });
+
   $('#vForm').addEventListener('submit', async e => {
     e.preventDefault();
     const msg = $('#vMsg'), btn = $('#vAdd'); msg.textContent = '';
-    const title = $('#v_title').value.trim(), file = $('#v_file').files[0], link = $('#v_url').value.trim();
+    const file = $('#v_file').files[0], link = $('#v_url').value.trim();
+    const title = $('#v_title').value.trim() || (file ? cleanName(file.name) : 'Tuto');
     if (!file && !link) { msg.textContent = 'Choisis un fichier ou colle un lien.'; return; }
     if (file && link) { msg.textContent = 'Un fichier OU un lien, pas les deux.'; return; }
     btn.disabled = true;
     try {
       let url = link, poster = null, duration = null;
       if (file) {
-        if (file.size > MAX_BYTES) throw new Error(`Fichier trop lourd (${(file.size / 1048576).toFixed(0)} Mo, 500 Mo max). Compresse-le avec la commande ci-dessous, ou mets-le sur YouTube (non répertorié) et colle le lien.`);
+        if (file.size > MAX_BYTES) throw new Error(`Fichier trop lourd (${(file.size / 1048576).toFixed(0)} Mo, 500 Mo max). Compresse-le (voir les conseils sous le formulaire), ou mets-le sur YouTube (non répertorié) et colle le lien.`);
         btn.textContent = 'Analyse…';
         const info = await probeVideo(file);
         if (info.duration > MAX_SECONDS + 0.5) throw new Error(`Vidéo trop longue (${fmtDur(Math.round(info.duration))}). 30 minutes maximum : raccourcis-la.`);
         duration = Math.round(info.duration);
         if (!(await isFastStart(file)) &&
-            !confirm('Cette vidéo n’est pas « optimisée web » : elle peut mettre plusieurs secondes à démarrer.\n\nPour un démarrage instantané, ré-exporte-la avec la commande affichée sous le formulaire.\n\nL’envoyer quand même ?'))
+            !confirm('Cette vidéo n’est pas « optimisée web » : elle peut mettre plusieurs secondes à démarrer.\n\nPour un démarrage instantané, ré-exporte-la (voir les conseils sous le formulaire).\n\nL’envoyer quand même ?'))
           throw new Error('Envoi annulé.');
         btn.textContent = 'Envoi…';
         const ext = file.type === 'video/webm' ? 'webm' : 'mp4', base = crypto.randomUUID();
@@ -661,7 +692,7 @@
     } catch (err) {
       msg.textContent = err.message || 'Envoi impossible.';
     } finally {
-      btn.disabled = false; btn.textContent = 'Ajouter la vidéo';
+      btn.disabled = false; btn.textContent = 'Ajouter';
     }
   });
 
