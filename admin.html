@@ -132,7 +132,7 @@
   <section id="app" hidden>
     <div class="bar">
       <h2>Outils</h2>
-      <button class="btn primary" id="addBtn">+ Ajouter un outil</button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap"><button class="btn" id="genBtn">▶ Tutos généraux</button><button class="btn primary" id="addBtn">+ Ajouter un outil</button></div>
     </div>
     <div id="list"></div>
   </section>
@@ -332,7 +332,8 @@
   // ── Liste ───────────────────────────────────────────────────────
 
   let videos = {};      // id de l'outil -> liste de vidéos
-  let vTool = null;
+  let vTool = null;     // null = tutos généraux (non liés à un outil)
+  const vKey = () => vTool ? vTool.id : 'general';
 
   async function refresh() {
     const [a, b] = await Promise.all([
@@ -343,9 +344,9 @@
     tools = a.data;
     videos = {};
     if (b.error) { if (!refresh.warned) { refresh.warned = true; toast('Vidéos indisponibles : exécute supabase-videos.sql dans Supabase.'); } }
-    else (b.data || []).forEach(v => (videos[v.tool_id] = videos[v.tool_id] || []).push(v));
+    else (b.data || []).forEach(v => { const k = v.tool_id || 'general'; (videos[k] = videos[k] || []).push(v); });
     render();
-    if (vTool && $('#vdlg').open) { vTool = tools.find(t => t.id === vTool.id) || vTool; renderVideos(); }
+    if ($('#vdlg').open) { if (vTool) vTool = tools.find(t => t.id === vTool.id) || vTool; renderVideos(); }
   }
 
   function status(t) {
@@ -581,15 +582,16 @@
 
   function openVideoDlg(t) {
     vTool = t;
-    $('#vdTitle').textContent = 'Vidéos · ' + t.name;
+    $('#vdTitle').textContent = t ? 'Vidéos · ' + t.name : 'Tutos généraux (non liés à un outil)';
     $('#vForm').reset(); $('#vMsg').textContent = '';
     renderVideos();
     $('#vdlg').showModal();
   }
   $('#vClose').addEventListener('click', () => $('#vdlg').close());
+  $('#genBtn').addEventListener('click', () => openVideoDlg(null));
 
   function renderVideos() {
-    const list = videos[vTool.id] || [];
+    const list = videos[vKey()] || [];
     $('#vdList').innerHTML = list.length ? list.map((v, i) => `
       <div class="vrow" data-id="${esc(v.id)}">
         <div class="vposter">${v.poster ? `<img src="${esc(v.poster)}" alt="" />` : '▶'}</div>
@@ -604,7 +606,7 @@
 
   $('#vdList').addEventListener('click', async e => {
     const b = e.target.closest('button[data-a]'); if (!b) return;
-    const list = videos[vTool.id] || [], id = b.closest('.vrow').dataset.id;
+    const list = videos[vKey()] || [], id = b.closest('.vrow').dataset.id;
     const i = list.findIndex(v => v.id === id), v = list[i];
     if (b.dataset.a === 'vdel') {
       if (!confirm(`Supprimer la vidéo « ${v.title} » ?`)) return;
@@ -651,9 +653,9 @@
       } else if (!/^https?:\/\//i.test(link)) {
         throw new Error('Le lien doit commencer par https://');
       }
-      const list = videos[vTool.id] || [];
+      const list = videos[vKey()] || [];
       const position = list.length ? Math.max(...list.map(v => v.position)) + 1 : 0;
-      const { error } = await sb.from('tool_videos').insert({ tool_id: vTool.id, title, url, poster, duration_s: duration, position });
+      const { error } = await sb.from('tool_videos').insert({ tool_id: vTool ? vTool.id : null, title, url, poster, duration_s: duration, position });
       if (error) throw error;
       $('#vForm').reset(); toast('Vidéo ajoutée.'); await refresh();
     } catch (err) {

@@ -272,6 +272,55 @@
     -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
   .vclose:hover { background: rgba(20,14,8,.75); }
 
+  /* ── Onglet « Tutos » + bibliothèque ─────────────────────────── */
+  .libbtn { position: fixed; top: 28px; right: 28px; z-index: 6; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    padding: 10px 14px 10px 16px; border-radius: 999px; color: var(--ink);
+    font: 500 .82rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; transition: transform .15s ease; }
+  .libbtn:hover { transform: translateY(-1px); }
+  .libbtn svg { width: 15px; height: 15px; fill: none; stroke: #A87B27; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .libbtn .libcount { min-width: 20px; padding: 1px 7px; border-radius: 99px; font-size: .68rem; font-weight: 700; text-align: center; color: #fff;
+    background: linear-gradient(180deg, #EBC06A, #A87B27); }
+  .libbtn:focus-visible, .libclose:focus-visible, .chip:focus-visible, .vcard:focus-visible { outline: 2px solid rgba(47,37,25,.55); outline-offset: 2px; }
+
+  .libback { position: fixed; inset: 0; z-index: 69; background: rgba(30,22,12,.28); opacity: 0; visibility: hidden;
+    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); transition: opacity .3s ease, visibility 0s .3s; }
+  .libback.open { opacity: 1; visibility: visible; transition: opacity .3s ease, visibility 0s; }
+  .lib { position: fixed; top: 0; right: 0; bottom: 0; z-index: 70; width: min(640px, 100%); padding: 24px 22px 28px; overflow-y: auto;
+    border-radius: 28px 0 0 28px; background: rgba(255,255,255,.64); visibility: hidden; transform: translateX(104%);
+    transition: transform .4s cubic-bezier(.2,.8,.2,1), visibility 0s .4s; }
+  .lib.open { visibility: visible; transform: none; transition: transform .4s cubic-bezier(.2,.8,.2,1), visibility 0s; }
+  .libhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+  .libhead h2 { margin: 0; font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 600; }
+  .libhead p { margin: 4px 0 0; font-size: .8rem; color: var(--ink-soft); }
+  .libclose { flex: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 1.25rem; line-height: 1; color: var(--ink);
+    border: 1px solid var(--glass-edge); background: rgba(255,255,255,.6); }
+  .libsearch { width: 100%; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--glass-edge); background: rgba(255,255,255,.6);
+    font: 400 .88rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; color: var(--ink); outline: none; }
+  .libsearch:focus { box-shadow: 0 0 0 3px rgba(168,123,39,.25); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 18px; }
+  .chip { all: unset; box-sizing: border-box; cursor: pointer; padding: 6px 14px; border-radius: 999px; font: 500 .76rem -apple-system, 'Segoe UI', sans-serif;
+    background: rgba(255,255,255,.62); border: 1px solid var(--glass-edge); color: var(--ink); }
+  .chip.on { background: linear-gradient(180deg, #EBC06A, #A87B27); color: #fff; }
+  .libgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px 16px; }
+  .vcard { all: unset; box-sizing: border-box; cursor: pointer; display: block; border-radius: 16px; }
+  .vthumb { position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center;
+    background: var(--tile-bg, linear-gradient(155deg, #223354, #0d1a2e)); font-size: 2.2rem;
+    box-shadow: 0 8px 20px rgba(var(--shadow),.25), inset 0 0 0 1px rgba(255,255,255,.3); transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease; }
+  .vthumb > img:not(.vfi) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .vthumb .vfi { width: 46px; height: 46px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+  .vplay { position: absolute; width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.85); box-shadow: 0 4px 14px rgba(0,0,0,.25);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); transition: transform .2s ease, background .2s ease; }
+  .vplay svg { width: 16px; height: 16px; fill: var(--ink); margin-left: 2px; }
+  .vdur { position: absolute; right: 8px; bottom: 8px; padding: 2px 7px; border-radius: 6px; font-size: .68rem; font-weight: 600; color: #fff;
+    background: rgba(20,14,8,.65); font-variant-numeric: tabular-nums; }
+  .vcard:hover .vthumb { transform: translateY(-3px); box-shadow: 0 16px 32px rgba(var(--shadow),.32), inset 0 0 0 1px rgba(255,255,255,.4); }
+  .vcard:hover .vplay { transform: scale(1.12); background: #A87B27; }
+  .vcard:hover .vplay svg { fill: #fff; }
+  .vct { margin: 9px 2px 0; font-size: .86rem; font-weight: 600; line-height: 1.25; }
+  .vcs { margin: 2px 2px 0; font-size: .72rem; color: var(--ink-soft); }
+  @media (max-width: 640px) { .libbtn { top: 14px; right: 14px; } .lib { border-radius: 0; } }
+
   /* ── Pied ────────────────────────────────────────────────────── */
   footer { position: fixed; left: 18px; bottom: 24px; z-index: 9; display: flex; align-items: center; gap: 10px;
     padding: 8px 14px; border-radius: 999px; white-space: nowrap; font-size: .7rem; color: var(--ink-soft); }
@@ -304,6 +353,11 @@
 
 <div class="wallpaper" id="wall" aria-hidden="true"></div>
 <div class="flash" id="flash" aria-hidden="true"></div>
+
+<button class="libbtn glass" id="libBtn" type="button" aria-expanded="false" aria-controls="lib" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M10 8.5v7l6-3.5z"/></svg>
+  Tutos <span class="libcount" id="libCount">0</span>
+</button>
 
 <aside class="widget glass" id="widget" aria-label="Heure">
   <div class="wd-top">
@@ -353,6 +407,17 @@
 
 <div class="ctx glass" id="ctx" role="menu" hidden></div>
 <div class="toast" id="toast" role="status"></div>
+<div class="libback" id="libBack"></div>
+<aside class="lib glass" id="lib" aria-label="Bibliothèque de tutos" aria-hidden="true" inert>
+  <div class="libhead">
+    <div><h2>Tutos vidéo</h2><p>Présentations et tutos de tous les outils Aélys.</p></div>
+    <button class="libclose" id="libClose" type="button" aria-label="Fermer">×</button>
+  </div>
+  <input class="libsearch" id="libSearch" type="search" placeholder="Rechercher un tuto" autocomplete="off" aria-label="Rechercher un tuto" />
+  <div class="chips" id="libChips"></div>
+  <div class="libgrid" id="libGrid"></div>
+</aside>
+
 <div class="vmodal" id="vmodal" role="dialog" aria-modal="true" aria-label="Vidéo" hidden>
   <div class="vpanel glass">
     <button class="vclose" id="vclose" type="button" aria-label="Fermer la vidéo">×</button>
@@ -382,6 +447,7 @@
   const grid = $('grid'), searchEl = $('search');
 
   let tools = [];
+  let general = [];          // tutos non liés à un outil
   let offset = 0;            // horloge serveur - horloge de l'appareil
   let reloading = false;
   let introDone = false;
@@ -452,6 +518,7 @@
       const data = await r.json();
       offset = new Date(data.now).getTime() - Date.now();
       tools = data.tools.map(normalize);
+      general = Array.isArray(data.general) ? data.general : [];
       try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
     } catch (e) {
       let cached = null;
@@ -459,6 +526,7 @@
       if (cached && cached.tools) {
         offset = new Date(cached.now).getTime() - Date.now();
         tools = cached.tools.map(normalize);
+        general = Array.isArray(cached.general) ? cached.general : [];
       } else {
         tools = FALLBACK;
       }
@@ -515,7 +583,7 @@
     const list = !q ? ordered : ordered.filter(t => !t.locked &&
       ((t.name || '').toLowerCase().includes(q) || (t.desc || '').toLowerCase().includes(q)));
 
-    renderNews(); scheduleRelease();
+    renderNews(); scheduleRelease(); renderLibBtn();
 
     if (tools.length === 0 || list.length === 0) {
       grid.innerHTML = ''; lastHtml = '';
@@ -682,7 +750,7 @@
   searchEl.addEventListener('input', renderGrid);
   document.addEventListener('keydown', e => {
     const typing = /^(input|textarea)$/i.test((e.target.tagName || ''));
-    if (e.key === 'Escape') { if (!vmodal.hidden) { closeVideos(); return; } if (!ctx.hidden) closeCtx(); return; }
+    if (e.key === 'Escape') { if (!vmodal.hidden) { closeVideos(); return; } if (lib.classList.contains('open')) { closeLib(); return; } if (!ctx.hidden) closeCtx(); return; }
     if ((e.key === '/' && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
       e.preventDefault(); searchEl.focus(); searchEl.select();
     }
@@ -708,9 +776,10 @@
     });
   }
 
-  // ── Vidéos de présentation / tutos ──────────────────────────────
+  // ── Vidéos : lecteur + bibliothèque de tutos ────────────────────
 
   const vmodal = $('vmodal'), vstage = $('vstage');
+  const lib = $('lib'), libBack = $('libBack');
   let vState = null, vOpener = null;
   const warmed = new Map();
 
@@ -724,9 +793,9 @@
     return /^https?:\/\//i.test(url) ? { type: 'video', src: url } : null;
   }
 
-  // Préchauffage : dès que la souris approche du lien, on ouvre la connexion et on charge l'image de couverture
-  function warm(t) {
-    const v = t && t.videos && t.videos[0]; if (!v) return;
+  // Préchauffage : dès que la souris approche, on ouvre la connexion et on charge l'image de couverture
+  function warm(v) {
+    if (!v) return;
     if (v.poster) new Image().src = v.poster;
     const s = videoSource(v.url);
     if (s && s.type === 'video' && !warmed.has(v.url)) {
@@ -741,16 +810,16 @@
   }
 
   function playVideo(i) {
-    const t = vState.tool, v = t.videos[i];
+    const { label, items } = vState, v = items[i];
     vState.i = i; stopStage();
-    $('vtitle').textContent = v.title || t.name;
-    $('vtool').textContent = t.name + (t.videos.length > 1 ? ` · ${i + 1}/${t.videos.length}` : '');
+    $('vtitle').textContent = v.title || label;
+    $('vtool').textContent = (v.toolName || label) + (items.length > 1 ? ` · ${i + 1}/${items.length}` : '');
     [...$('vlist').children].forEach((b, k) => b.classList.toggle('on', k === i));
     const s = videoSource(v.url);
     if (!s) { vstage.innerHTML = '<p class="verr">Lien vidéo invalide.</p>'; return; }
     if (s.type === 'iframe') {
       const f = document.createElement('iframe');
-      f.src = s.src; f.title = v.title || t.name; f.allowFullscreen = true;
+      f.src = s.src; f.title = v.title || label; f.allowFullscreen = true;
       f.allow = 'autoplay; fullscreen; picture-in-picture'; f.referrerPolicy = 'strict-origin-when-cross-origin';
       vstage.appendChild(f); return;
     }
@@ -758,7 +827,7 @@
     el.controls = true; el.autoplay = true; el.playsInline = true; el.preload = 'auto';
     if (v.poster) el.poster = v.poster;
     el.src = s.src;
-    el.addEventListener('ended', () => { if (vState && vState.i < t.videos.length - 1) playVideo(vState.i + 1); });
+    el.addEventListener('ended', () => { if (vState && vState.i < items.length - 1) playVideo(vState.i + 1); });
     el.addEventListener('error', () => {
       vstage.innerHTML = '';
       const p = document.createElement('p'); p.className = 'verr'; p.textContent = 'Impossible de lire cette vidéo ici. ';
@@ -769,17 +838,22 @@
     el.play().catch(() => {});                  // si le navigateur refuse l'autoplay, le bouton lecture reste là
   }
 
-  function openVideos(id, i, opener) {
-    const t = findTool(id); if (!t || !t.videos || !t.videos.length) return;
-    vState = { tool: t, i: 0 }; vOpener = opener || null;
+  // Lit une liste de vidéos à partir de la n-ième ; la suivante démarre à la fin
+  function openList(label, items, start, opener) {
+    if (!items.length) return;
+    vState = { label, items, i: 0 }; vOpener = opener || null;
     const list = $('vlist'); list.innerHTML = '';
-    if (t.videos.length > 1) t.videos.forEach((v, k) => {
+    if (items.length > 1 && items.length <= 8) items.forEach((v, k) => {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = `${k + 1} · ${v.title || 'Vidéo ' + (k + 1)}`;
       b.addEventListener('click', () => playVideo(k)); list.appendChild(b);
     });
     vmodal.hidden = false; document.body.style.overflow = 'hidden';
-    playVideo(i || 0);
+    playVideo(start || 0);
     $('vclose').focus({ preventScroll: true });
+  }
+  function openVideos(id, start, opener) {
+    const t = findTool(id); if (!t || !t.videos || !t.videos.length) return;
+    openList(t.name, t.videos.map(v => ({ ...v, toolName: t.name })), start, opener);
   }
   function closeVideos() {
     stopStage(); vmodal.hidden = true; document.body.style.overflow = ''; vState = null;
@@ -788,12 +862,79 @@
   }
   $('vclose').addEventListener('click', closeVideos);
   vmodal.addEventListener('pointerdown', e => { if (e.target === vmodal) closeVideos(); });
+
+  // Lien vidéo sous une app
   grid.addEventListener('click', e => {
     const b = e.target.closest('.vid-link'); if (!b) return;
     e.preventDefault(); openVideos(b.dataset.vid, 0, b);
   });
   grid.addEventListener('pointerover', e => {
-    const b = e.target.closest && e.target.closest('.vid-link'); if (b) warm(findTool(b.dataset.vid));
+    const b = e.target.closest && e.target.closest('.vid-link');
+    if (b) { const t = findTool(b.dataset.vid); warm(t && t.videos && t.videos[0]); }
+  });
+
+  // ── Onglet « Tutos » : bibliothèque de toutes les vidéos ────────
+
+  let libFilter = 'all', libList = [];
+
+  function libraryItems() {
+    const out = general.map(v => ({ ...v, toolId: null, toolName: 'Général', icon: '🎓', color: '#A87B27' }));
+    tools.filter(t => !t.locked).forEach(t => (t.videos || []).forEach(v =>
+      out.push({ ...v, toolId: t.id, toolName: t.name, icon: t.icon, image: t.image, color: t.color })));
+    return out;
+  }
+  function renderLibBtn() {
+    const n = libraryItems().length;
+    $('libBtn').hidden = n === 0;
+    $('libCount').textContent = n;
+    if (lib.classList.contains('open')) renderLib();
+  }
+  function renderLib() {
+    const all = libraryItems(), q = $('libSearch').value.trim().toLowerCase();
+    const owners = [];
+    all.forEach(v => { const k = v.toolId || 'general'; if (!owners.some(o => o.k === k)) owners.push({ k, name: v.toolName }); });
+    if (libFilter !== 'all' && !owners.some(o => o.k === libFilter)) libFilter = 'all';
+    $('libChips').innerHTML = [{ k: 'all', name: 'Tout' }, ...owners].map(o =>
+      `<button type="button" class="chip${o.k === libFilter ? ' on' : ''}" data-k="${escapeHtml(o.k)}">${escapeHtml(o.name)}</button>`).join('');
+    libList = all.filter(v => (libFilter === 'all' || (v.toolId || 'general') === libFilter) &&
+      (!q || (v.title || '').toLowerCase().includes(q) || v.toolName.toLowerCase().includes(q)));
+    $('libGrid').innerHTML = libList.length ? libList.map((v, i) => {
+      const bg = tileBackground(v.color);
+      const media = v.poster ? `<img src="${escapeHtml(v.poster)}" alt="" loading="lazy" draggable="false" />`
+        : (v.image ? `<img class="vfi" src="${escapeHtml(v.image)}" alt="" draggable="false" />` : escapeHtml(v.icon || '🔗'));
+      const dur = v.duration != null ? `<span class="vdur">${Math.floor(v.duration / 60)}:${pad(v.duration % 60)}</span>` : '';
+      return `<button type="button" class="vcard" data-i="${i}">
+        <div class="vthumb"${bg ? ` style="--tile-bg:${escapeHtml(bg)}"` : ''}>${media}
+          <span class="vplay"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 .6v8.8L9.2 5z"/></svg></span>${dur}</div>
+        <div class="vct">${escapeHtml(v.title || 'Vidéo')}</div><div class="vcs">${escapeHtml(v.toolName)}</div>
+      </button>`;
+    }).join('') : '<p class="empty">Aucun tuto trouvé.</p>';
+  }
+  function openLib() {
+    renderLib();
+    lib.inert = false; lib.setAttribute('aria-hidden', 'false');
+    lib.classList.add('open'); libBack.classList.add('open'); $('libBtn').setAttribute('aria-expanded', 'true');
+    $('libClose').focus({ preventScroll: true });
+  }
+  function closeLib() {
+    lib.classList.remove('open'); libBack.classList.remove('open'); $('libBtn').setAttribute('aria-expanded', 'false');
+    lib.inert = true; lib.setAttribute('aria-hidden', 'true');
+    $('libBtn').focus({ preventScroll: true });
+  }
+  $('libBtn').addEventListener('click', () => lib.classList.contains('open') ? closeLib() : openLib());
+  $('libClose').addEventListener('click', closeLib);
+  libBack.addEventListener('pointerdown', closeLib);
+  $('libSearch').addEventListener('input', renderLib);
+  $('libChips').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    libFilter = b.dataset.k; renderLib();
+  });
+  $('libGrid').addEventListener('click', e => {
+    const c = e.target.closest('.vcard'); if (!c) return;
+    openList('Tutos', libList, Number(c.dataset.i), c);
+  });
+  $('libGrid').addEventListener('pointerover', e => {
+    const c = e.target.closest && e.target.closest('.vcard'); if (c) warm(libList[Number(c.dataset.i)]);
   });
 
   // ── Démarrage ───────────────────────────────────────────────────
@@ -803,7 +944,7 @@
   setInterval(tick, 1000);
   try {                                            // copie locale d'abord : jamais d'écran vide
     const c = JSON.parse(localStorage.getItem(CACHE_KEY));
-    if (c && c.tools) { offset = new Date(c.now).getTime() - Date.now(); tools = c.tools.map(normalize); renderGrid(); }
+    if (c && c.tools) { offset = new Date(c.now).getTime() - Date.now(); tools = c.tools.map(normalize); general = Array.isArray(c.general) ? c.general : []; renderGrid(); }
   } catch (e) {}
   updateWidget(nowMs());
   refresh();
