@@ -879,28 +879,38 @@
     cMsg('');
     try {
       const wb = window.XLSX.read(await file.arrayBuffer(), { type: 'array' });
-      const sheet = key => { const n = wb.SheetNames.find(x => norm(x).startsWith(key)); return n ? window.XLSX.utils.sheet_to_json(wb.Sheets[n], { defval: '', raw: false }) : null; };
-      const sRows = sheet('magasin') || [], cRows = sheet('identifiant');
-      if (!cRows) throw new Error('Feuille « Identifiants » introuvable dans ce fichier.');
+      const sheetBy = fn => { const n = wb.SheetNames.find(fn); return n ? window.XLSX.utils.sheet_to_json(wb.Sheets[n], { defval: '', raw: false }) : null; };
+      const sRows = sheetBy(x => norm(x).startsWith('magasin')) || [];
+      // « Identifiants », ou à défaut la première feuille (ex. « Feuil1 » : Application | Magasin | Identifiant | Mot de passe)
+      const cRows = sheetBy(x => norm(x).startsWith('identifiant')) || sheetBy(x => !norm(x).startsWith('magasin') && !norm(x).startsWith('mode'));
+      if (!cRows) throw new Error('Aucune feuille d’identifiants trouvée dans ce fichier.');
+      const lab = v => { v = String(v == null ? '' : v).trim(); return /^\d+$/.test(v) ? 'Magasin ' + v : v; };   // « 200 » → « Magasin 200 »
+      const GEN = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+      const genCode = used => { let c; do { const a = new Uint32Array(6); crypto.getRandomValues(a); c = [...a].map(n => GEN[n % GEN.length]).join(''); } while (used.has(c.toLowerCase())); used.add(c.toLowerCase()); return c; };
 
-      const shS = sRows.map(r => ({ name: pick(r, ['magasin', 'nom', 'boutique']), code: pick(r, ['codedacces', 'code', 'motdepasse', 'mdp', 'password', 'acces']) })).filter(x => x.name);
+      const shS = sRows.map(r => ({ name: lab(pick(r, ['magasin', 'nom', 'boutique'])), code: pick(r, ['codedacces', 'code', 'motdepasse', 'mdp', 'password', 'acces']) })).filter(x => x.name);
       const codes = new Set();
+      const inSheet = new Set(shS.map(x => x.name.trim().toLowerCase()));
+      const used = new Set(stores.filter(x => !inSheet.has(x.name.trim().toLowerCase())).map(x => x.code.trim().toLowerCase()));
       for (const x of shS) {
         if (!x.code) throw new Error(`Le magasin « ${x.name} » n’a pas de code d’accès.`);
-        const k = x.code.toLowerCase(); if (codes.has(k)) throw new Error(`Le code « ${x.code} » est utilisé par deux magasins : chaque magasin doit avoir son propre code.`);
+        const k = x.code.toLowerCase(); if (codes.has(k) || used.has(k)) throw new Error(`Le code « ${x.code} » est utilisé par deux magasins : chaque magasin doit avoir son propre code.`);
         codes.add(k);
       }
       const known = new Set([...stores.map(x => x.name.trim().toLowerCase()), ...shS.map(x => x.name.trim().toLowerCase())]);
-      const items = [], unknown = new Set();
+      shS.forEach(x => used.add(x.code.toLowerCase()));
+      const items = [], unknown = new Map();
       cRows.forEach(r => {
         const app = pick(r, ['application', 'appli', 'app', 'outil']); if (!app) return;
-        const st = pick(r, ['magasin', 'boutique']), all = isAll(st);
-        if (!all && !known.has(st.trim().toLowerCase())) unknown.add(st);
+        const st = lab(pick(r, ['magasin', 'boutique'])), all = isAll(st);
+        if (!all && !known.has(st.trim().toLowerCase())) unknown.set(st.trim().toLowerCase(), st);
         items.push({ st: all ? null : st.trim().toLowerCase(), app, login: pick(r, ['identifiant', 'login', 'idd', 'id', 'utilisateur']), password: pick(r, ['motdepasse', 'mdp', 'password', 'pass']), note: pick(r, ['note', 'commentaire']) || null });
       });
-      if (unknown.size) throw new Error('Magasin(s) inconnu(s) dans « Identifiants » : ' + [...unknown].join(', ') + '. Ajoute-les dans la feuille « Magasins ».');
+      // magasins cités mais absents de la liste : créés automatiquement, avec un code d'accès généré
+      const made = [...unknown.values()].map(name => { const m = /^Magasin (\d+)$/.exec(name); const k = m ? m[1] : ''; if (k && !used.has(k.toLowerCase())) { used.add(k.toLowerCase()); return { name, code: k }; } return { name, code: genCode(used) }; });   // « Magasin 200 » → code 200
+      shS.push(...made);
       if (!items.length) throw new Error('Aucun identifiant trouvé dans le fichier.');
-      if (!confirm(`Importer ${shS.length} magasin(s) et ${items.length} identifiant(s) ?\n\nLes ${creds.length} identifiants actuels seront remplacés.`)) return;
+      if (!confirm(`Importer ${shS.length} magasin(s)${made.length ? ' (dont ' + made.length + ' créé(s), code d’accès = numéro du magasin)' : ''} et ${items.length} identifiant(s) ?\n\nLes ${creds.length} identifiants actuels seront remplacés.`)) return;
 
       cMsg('Import en cours…', true);
       for (const x of shS) {
@@ -914,7 +924,7 @@
       const oldIds = creds.map(c => c.id);
       for (let i = 0; i < rows.length; i += 200) { const { error } = await sb.from('credentials').insert(rows.slice(i, i + 200)); if (error) throw error; }
       for (let i = 0; i < oldIds.length; i += 100) { const { error } = await sb.from('credentials').delete().in('id', oldIds.slice(i, i + 100)); if (error) throw error; }
-      await loadCreds(); cMsg(`Import terminé : ${shS.length} magasin(s), ${rows.length} identifiant(s).`, true);
+      await loadCreds(); cMsg(`Import terminé : ${shS.length} magasin(s), ${rows.length} identifiant(s).${made.length ? ' Les codes d’accès des nouveaux magasins sont dans la liste ci-dessus (ou via « Exporter en Excel »).' : ''}`, true);
     } catch (err) { cMsg(err.message || 'Import impossible.'); loadCreds(); }
   });
 
