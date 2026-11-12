@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Aélythèque · Vérification</title>
+<style>
+  :root { --bg: #F5F1EE; --card: #fff; --text: #26313F; --muted: #7A7068; --ok: #2F7D4F; --warn: #A87B27; --ko: #B3402F; --line: #EFE8E0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, 'Segoe UI', sans-serif; }
+  main { max-width: 680px; margin: 0 auto; padding: 28px 16px 60px; }
+  h1 { margin: 0 0 4px; font-size: 1.35rem; }
+  p.sub { margin: 0 0 18px; color: var(--muted); font-size: .88rem; }
+  .sum { padding: 12px 16px; border-radius: 12px; font-weight: 600; margin-bottom: 14px; background: var(--card); border: 1px solid var(--line); }
+  .sum.ok { color: var(--ok); } .sum.ko { color: var(--ko); } .sum.warn { color: var(--warn); }
+  .row { display: flex; gap: 10px; padding: 10px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; }
+  .row .i { flex: none; width: 1.4em; text-align: center; }
+  .row b { display: block; font-weight: 600; }
+  .row small { color: var(--muted); display: block; word-break: break-word; }
+  button { font: inherit; padding: 9px 16px; border-radius: 10px; border: 1px solid var(--line); background: #112033; color: #fff; cursor: pointer; margin-top: 8px; }
+  iframe { position: absolute; width: 1280px; height: 800px; left: -9999px; top: 0; border: 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Vérification de l’Aélythèque</h1>
+  <p class="sub">Ouvre cette page après chaque mise en ligne : tout doit être vert. Elle ne modifie rien et n’affiche aucun mot de passe.</p>
+  <div id="sum" class="sum">Vérification en cours…</div>
+  <div id="res"></div>
+  <button id="again">Relancer</button>
+</main>
+<iframe id="fr" title="test" tabindex="-1" aria-hidden="true"></iframe>
+<script src="config.js"></script>
+<script>
+(function () {
+  const C = window.AELYS_CONFIG || {}, $ = id => document.getElementById(id);
+  const out = [];
+  const add = (st, name, detail) => out.push({ st, name, detail: detail || '' });
+  const hdr = { apikey: C.supabaseAnonKey, Authorization: 'Bearer ' + C.supabaseAnonKey, 'Content-Type': 'application/json' };
+  const rpc = (fn, body) => fetch(`${C.supabaseUrl}/rest/v1/rpc/${fn}`, { method: 'POST', headers: hdr, body: JSON.stringify(body || {}) });
+  const head = async url => { try { const r = await fetch(url, { method: 'HEAD', cache: 'no-store' }); return r.ok ? r : null; } catch (e) { return null; } };
+
+  async function run() {
+    out.length = 0; $('sum').className = 'sum'; $('sum').textContent = 'Vérification en cours…'; $('res').innerHTML = '';
+
+    // Fichiers du site
+    for (const f of ['index.html', 'admin.html', 'wallpaper.jpg', 'fonts/fonts.css', 'vendor/supabase-2.45.4.min.js', 'vendor/xlsx-0.20.3.full.min.js', 'config.js'])
+      add(await head(f) ? 'ok' : 'ko', 'Fichier ' + f, await head(f) ? '' : 'introuvable : il manque dans GitHub ?');
+
+    // Configuration
+    if (!C.supabaseUrl || !C.supabaseAnonKey) { add('ko', 'config.js', 'supabaseUrl / supabaseAnonKey manquants'); return show(); }
+    add('ok', 'config.js renseigné');
+
+    // Liste publique
+    try {
+      const r = await rpc('get_tools'); const d = await r.json();
+      if (!r.ok || !Array.isArray(d.tools)) throw new Error('réponse inattendue (' + r.status + ')');
+      add('ok', 'Liste des outils (get_tools)', d.tools.length + ' outil(s), ' + d.tools.filter(t => t.locked).length + ' programmé(s)');
+      add('banner' in d ? 'ok' : 'warn', 'SQL « améliorations » (bandeau, retrait programmé)', 'banner' in d ? 'installé' : 'pas encore lancé : supabase-ameliorations.sql');
+      add(Array.isArray(d.general) ? 'ok' : 'warn', 'SQL « vidéos » (tutos généraux)', Array.isArray(d.general) ? 'installé' : 'pas encore lancé : supabase-videos.sql');
+      const leak = d.tools.filter(t => t.locked && (t.url || t.icon || t.image));
+      add(leak.length ? 'ko' : 'ok', 'Outils programmés bien masqués côté serveur', leak.length ? leak.length + ' fuite(s) !' : 'nom, lien et icône cachés jusqu’à l’heure');
+    } catch (e) { add('ko', 'Liste des outils (get_tools)', String(e.message || e)); }
+
+    // Identifiants : le service répond, un faux code est refusé proprement (rien n'est divulgué)
+    try {
+      const r = await rpc('get_credentials', { p_code: '__verif__' });
+      if (r.status === 404) add('warn', 'Identifiants par magasin', 'pas encore activé : supabase-identifiants.sql');
+      else if (r.status === 400) add('warn', 'Identifiants par magasin', 'trop d’essais récents depuis cette connexion (protection active) : réessaie dans 10 min');
+      else { const d = await r.json(); add(r.ok && d === null ? 'ok' : 'ko', 'Identifiants : un faux code est refusé', r.ok && d === null ? 'aucune donnée renvoyée' : 'réponse inattendue !'); }
+    } catch (e) { add('ko', 'Identifiants par magasin', String(e.message || e)); }
+
+    // Statistiques (appel à vide : n'enregistre rien)
+    try { const r = await rpc('track', { p_kind: 'test', p_ref: 'verif' }); add(r.status === 404 ? 'warn' : (r.ok ? 'ok' : 'ko'), 'Statistiques anonymes', r.status === 404 ? 'pas encore activées : supabase-ameliorations.sql' : (r.ok ? 'actives' : 'erreur ' + r.status)); }
+    catch (e) { add('ko', 'Statistiques anonymes', String(e.message || e)); }
+
+    // En-têtes de sécurité (vercel.json)
+    try {
+      const r = await fetch('index.html', { cache: 'no-store' });
+      const csp = r.headers.get('content-security-policy'), xfo = r.headers.get('x-frame-options');
+      add(csp ? 'ok' : 'warn', 'En-têtes de sécurité (CSP)', csp ? 'actifs' : 'absents : vercel.json n’est pas en ligne (normal en local)');
+      add(xfo ? 'ok' : 'warn', 'Protection contre l’affichage dans un cadre', xfo ? 'active' : 'absente');
+    } catch (e) {}
+
+    // Page d'accueil réellement affichée
+    await new Promise(res => {
+      const fr = $('fr'); let done = false;
+      const finish = () => { if (done) return; done = true; res(); };
+      fr.onload = () => setTimeout(() => {
+        try {
+          const d = fr.contentDocument;
+          add(/Aélythèque/.test(d.title) ? 'ok' : 'ko', 'Titre de la page', d.title);
+          add(d.querySelector('h1') ? 'ok' : 'warn', 'Titre principal (h1)');
+          const n = d.querySelectorAll('.tool').length;
+          add(n > 0 ? 'ok' : 'warn', 'Tuiles affichées', n + ' tuile(s)');
+          add(d.getElementById('credBtn') ? 'ok' : 'ko', 'Onglet « Accès »');
+        } catch (e) { add('warn', 'Page d’accueil', 'non inspectable : ' + e.message); }
+        finish();
+      }, 2500);
+      fr.src = 'index.html?verif=' + Date.now();
+      setTimeout(finish, 9000);
+    });
+    show();
+  }
+
+  function show() {
+    const ico = { ok: '✅', warn: '⚠️', ko: '❌' };
+    $('res').innerHTML = out.map(o => `<div class="row"><span class="i">${ico[o.st]}</span><div><b>${o.name}</b>${o.detail ? `<small>${String(o.detail).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]))}</small>` : ''}</div></div>`).join('');
+    const ko = out.filter(o => o.st === 'ko').length, warn = out.filter(o => o.st === 'warn').length;
+    const s = $('sum');
+    s.className = 'sum ' + (ko ? 'ko' : warn ? 'warn' : 'ok');
+    s.textContent = ko ? `❌ ${ko} problème(s) à corriger` : warn ? `⚠️ Tout fonctionne, ${warn} point(s) à finaliser` : '✅ Tout est bon';
+  }
+  $('again').addEventListener('click', run);
+  run();
+})();
+</script>
+</body>
+</html>

@@ -6,9 +6,8 @@
 <meta name="robots" content="noindex, nofollow" />
 <title>Aélythèque · Administration</title>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<link rel="preload" href="fonts/playfair-display-61a96359.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="stylesheet" href="fonts/fonts.css" />
 <style>
   :root {
     --cream: #F5F1EE; --sand: #EFE8E0; --gold: #A87B27; --gold-light: #C9A04A;
@@ -117,6 +116,16 @@
   .cform input[type=text] { font-size: .86rem; }
   .vrow .badge { margin: 0 0 0 6px; }
   .pw { font-family: ui-monospace, Consolas, monospace; }
+  .grip { flex: none; cursor: grab; color: var(--text-muted); user-select: none; font-size: 1.1rem; padding: 0 2px; }
+  .row.dragging { opacity: .35; }
+  .row.dragover { border-color: var(--gold-light); box-shadow: 0 -3px 0 var(--gold-light); }
+  textarea { width: 100%; font: 400 .9rem 'DM Sans', sans-serif; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--sand); background: var(--cream); color: var(--text); resize: vertical; min-height: 78px; }
+  .srow { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 42px; gap: 10px; align-items: center; padding: 5px 0; font-size: .84rem; }
+  .srow .sn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .srow b { text-align: right; color: var(--navy); }
+  .sbarw { height: 8px; border-radius: 99px; background: var(--sand); overflow: hidden; }
+  .sbar { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--gold-light), var(--gold)); }
+  dialog h4 { margin: 18px 0 4px; font-family: 'Playfair Display', serif; color: var(--navy); font-size: 1rem; }
   @media (max-width: 560px) {
     .cform { grid-template-columns: 1fr; }
     .row { flex-wrap: wrap; }
@@ -151,7 +160,7 @@
   <section id="app" hidden>
     <div class="bar">
       <h2>Outils</h2>
-      <div style="display:flex; gap:8px; flex-wrap:wrap"><button class="btn" id="genBtn">▶ Tutos généraux</button><button class="btn" id="credBtnA">🔑 Identifiants</button><button class="btn primary" id="addBtn">+ Ajouter un outil</button></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap"><button class="btn" id="genBtn">▶ Tutos généraux</button><button class="btn" id="credBtnA">🔑 Identifiants</button><button class="btn" id="stBtn">📊 Statistiques</button><button class="btn" id="bnBtn">📢 Bandeau</button><button class="btn" id="bkBtn" title="Télécharge une copie de tes outils et vidéos">💾 Sauvegarde</button><button class="btn primary" id="addBtn">+ Ajouter un outil</button></div>
     </div>
     <div id="list"></div>
   </section>
@@ -197,6 +206,10 @@
       <input id="f_when" type="datetime-local" />
       <div class="hint">D’ici là, le public voit une tuile floutée avec un compte à rebours. Le nom, le lien et l’icône réels ne quittent pas la base avant l’heure.</div>
     </div>
+
+    <label for="f_end">Retrait programmé (facultatif)</label>
+    <input id="f_end" type="datetime-local" />
+    <div class="hint">L’outil disparaît tout seul de la page à cette date. Laisse vide pour qu’il reste en ligne.</div>
 
     <div class="msg" id="formMsg" role="alert"></div>
     <div class="foot">
@@ -270,10 +283,32 @@
   </div>
 </dialog>
 
+<dialog id="stdlg">
+  <div class="vbox">
+    <h3>Statistiques</h3>
+    <div class="hint">Comptage anonyme : on sait quel outil est ouvert et quelle vidéo est lue, jamais par qui.</div>
+    <label for="stDays">Période</label>
+    <select id="stDays"><option value="7">7 derniers jours</option><option value="30" selected>30 derniers jours</option><option value="90">90 derniers jours</option><option value="365">12 derniers mois</option></select>
+    <div id="stBody"></div>
+    <div class="foot"><button type="button" class="btn" id="stClose">Fermer</button></div>
+  </div>
+</dialog>
+
+<dialog id="bndlg">
+  <div class="vbox">
+    <h3>Bandeau d’annonce</h3>
+    <div class="hint">Un message affiché en haut de la page d’accueil pour tout le monde (maintenance, rappel, nouveauté…). Vide = aucun bandeau.</div>
+    <label for="bn_text">Message</label>
+    <textarea id="bn_text" maxlength="240" placeholder="Ex. : Les outils seront indisponibles ce soir de 22h à 23h pour maintenance."></textarea>
+    <div class="msg" id="bnMsg" role="alert"></div>
+    <div class="foot"><button type="button" class="btn" id="bnClose">Fermer</button><button type="button" class="btn danger" id="bnClear">Retirer le bandeau</button><button type="button" class="btn primary" id="bnSave">Publier</button></div>
+  </div>
+</dialog>
+
 <div id="toast" role="status"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="vendor/supabase-2.45.4.min.js"></script>
+<script src="vendor/xlsx-0.20.3.full.min.js"></script>
 <script src="config.js"></script>
 <script>
 (function () {
@@ -411,8 +446,9 @@
 
   function status(t) {
     if (!t.active) return ['off', 'Masqué'];
+    if (t.end_at && new Date(t.end_at).getTime() <= Date.now()) return ['off', 'Terminé · ' + fmtDate(t.end_at)];
     if (t.release_at && new Date(t.release_at).getTime() > Date.now()) return ['warn', 'Programmé · ' + fmtDate(t.release_at)];
-    return ['ok', 'En ligne'];
+    return ['ok', t.end_at ? 'En ligne · jusqu’au ' + fmtDate(t.end_at) : 'En ligne'];
   }
 
   function render() {
@@ -422,13 +458,15 @@
       const [cls, label] = status(t);
       const scheduled = cls === 'warn';
       return `
-      <div class="row${t.active ? '' : ' off'}" data-id="${esc(t.id)}">
+      <div class="row${t.active ? '' : ' off'}" data-id="${esc(t.id)}" draggable="true">
+        <span class="grip" aria-hidden="true" title="Glisser pour changer l’ordre">⠿</span>
         ${thumbHtml(t)}
         <div class="info"><b>${esc(t.name)}</b><span class="u">${esc(t.url)}</span><span class="badge ${cls}">${esc(label)}</span></div>
         <div class="actions">
           <button class="btn sm" data-a="up" ${i === 0 ? 'disabled' : ''} aria-label="Monter">↑</button>
           <button class="btn sm" data-a="down" ${i === tools.length - 1 ? 'disabled' : ''} aria-label="Descendre">↓</button>
           <button class="btn sm" data-a="edit">Modifier</button>
+          <button class="btn sm" data-a="dup">Dupliquer</button>
           <button class="btn sm" data-a="vid">▶ Vidéos${(videos[t.id] || []).length ? ' (' + videos[t.id].length + ')' : ''}</button>
           ${scheduled ? '<button class="btn sm" data-a="now">Publier maintenant</button>' : ''}
           <button class="btn sm" data-a="toggle">${t.active ? 'Retirer' : 'Remettre'}</button>
@@ -444,11 +482,37 @@
     const i = tools.findIndex(t => t.id === id), t = tools[i];
     const a = b.dataset.a;
     if (a === 'edit') return openForm(t);
+    if (a === 'dup') return openForm(t, true);
     if (a === 'vid') return openVideoDlg(t);
     if (a === 'up' || a === 'down') return move(i, a === 'up' ? -1 : 1);
     if (a === 'now') { if (!confirm(`Publier « ${t.name} » maintenant ?`)) return; return update(id, { release_at: null }, 'Publié.'); }
     if (a === 'toggle') return update(id, { active: !t.active }, t.active ? 'Retiré de la page.' : 'Remis en ligne.');
     if (a === 'del') return remove(t);
+  });
+
+  let dragId = null;
+  const clearDrag = () => document.querySelectorAll('.row.dragging, .row.dragover').forEach(x => x.classList.remove('dragging', 'dragover'));
+  $('#list').addEventListener('dragstart', e => {
+    const r = e.target.closest && e.target.closest('.row'); if (!r) return;
+    dragId = r.dataset.id; r.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragId);
+  });
+  $('#list').addEventListener('dragend', () => { dragId = null; clearDrag(); });
+  $('#list').addEventListener('dragover', e => {
+    const r = e.target.closest && e.target.closest('.row'); if (!r || !dragId) return;
+    e.preventDefault();
+    document.querySelectorAll('.row.dragover').forEach(x => x.classList.remove('dragover'));
+    if (r.dataset.id !== dragId) r.classList.add('dragover');
+  });
+  $('#list').addEventListener('drop', async e => {
+    const r = e.target.closest && e.target.closest('.row'); if (!r || !dragId) return;
+    e.preventDefault();
+    const from = tools.findIndex(t => t.id === dragId), to = tools.findIndex(t => t.id === r.dataset.id);
+    dragId = null; clearDrag();
+    if (from < 0 || to < 0 || from === to) return;
+    const arr = tools.slice(); const [m] = arr.splice(from, 1); arr.splice(to, 0, m);
+    const res = await Promise.all(arr.map((t, k) => t.position === k ? null : sb.from('tools').update({ position: k }).eq('id', t.id)).filter(Boolean));
+    if (res.some(x => x.error)) toast('Erreur lors du déplacement.');
+    refresh();
   });
 
   async function update(id, patch, okMsg) {
@@ -501,18 +565,19 @@
   }
   ['#f_file', '#f_image', '#f_color', '#f_icon'].forEach(s => $(s).addEventListener('input', previewTile));
 
-  function openForm(t) {
-    editing = t || null;
+  function openForm(t, asCopy) {
+    editing = (t && !asCopy) ? t : null;
     form.reset();
     $('#formMsg').textContent = '';
-    $('#dlgTitle').textContent = t ? 'Modifier l’outil' : 'Ajouter un outil';
-    $('#f_name').value = t ? t.name : '';
+    $('#dlgTitle').textContent = asCopy ? 'Dupliquer l’outil' : (t ? 'Modifier l’outil' : 'Ajouter un outil');
+    $('#f_name').value = t ? t.name + (asCopy ? ' (copie)' : '') : '';
     $('#f_descr').value = t ? t.descr : '';
     $('#f_url').value = t ? t.url : '';
     $('#f_icon').value = t ? t.icon : '';
-    $('#f_image').value = t && t.image ? t.image : '';
+    $('#f_image').value = t && t.image && !(asCopy && /\/storage\/v1\/object\/public\/icons\//.test(t.image)) ? t.image : '';   // une copie n'emprunte pas le fichier de l'original (supprimé avec lui)
     $('#f_color').value = t && /^#[0-9a-f]{6}$/i.test(t.color || '') ? t.color : '#A87B27';
-    const later = t && t.release_at && new Date(t.release_at).getTime() > Date.now();
+    const later = !asCopy && t && t.release_at && new Date(t.release_at).getTime() > Date.now();
+    $('#f_end').value = t && !asCopy && t.end_at ? toLocalInput(t.end_at) : '';
     form.mode.value = later ? 'later' : 'now';
     $('#f_when').value = later ? toLocalInput(t.release_at) : '';
     syncMode(); previewTile();
@@ -543,6 +608,15 @@
       release_at = d.toISOString();
     }
 
+    let end_at;                                   // undefined = on ne touche pas à la colonne (avant le SQL du lot 2)
+    const ev = $('#f_end').value;
+    if (ev) {
+      const ed = new Date(ev);
+      if (ed.getTime() <= Date.now()) { msg.textContent = 'La date de retrait est déjà passée.'; return; }
+      if (release_at && ed.getTime() <= new Date(release_at).getTime()) { msg.textContent = 'Le retrait doit être après la sortie.'; return; }
+      end_at = ed.toISOString();
+    } else if (editing && editing.end_at) end_at = null;
+
     btn.disabled = true; btn.textContent = 'Enregistrement…';
     try {
       const color = $('#f_color').value, emoji = $('#f_icon').value.trim() || '🔗';
@@ -564,6 +638,7 @@
       let teaser = (!im && image && editing && editing.teaser) ? editing.teaser : makeTeaser(im, color, emoji);
 
       const row = { name, descr: $('#f_descr').value.trim(), url, icon: emoji, image, color, teaser, release_at };
+      if (end_at !== undefined) row.end_at = end_at;
       let res;
       if (editing) res = await sb.from('tools').update(row).eq('id', editing.id);
       else {
@@ -921,11 +996,56 @@
       const fresh = await sb.from('stores').select('*'); if (fresh.error) throw fresh.error;
       const idOf = n => (fresh.data.find(y => y.name.trim().toLowerCase() === n) || {}).id || null;
       const rows = items.map((x, i) => ({ store_id: x.st ? idOf(x.st) : null, tool_id: toolIdFor(x.app), app: x.app, login: x.login, password: x.password, note: x.note, position: i }));
-      const oldIds = creds.map(c => c.id);
-      for (let i = 0; i < rows.length; i += 200) { const { error } = await sb.from('credentials').insert(rows.slice(i, i + 200)); if (error) throw error; }
-      for (let i = 0; i < oldIds.length; i += 100) { const { error } = await sb.from('credentials').delete().in('id', oldIds.slice(i, i + 100)); if (error) throw error; }
+      const { error: rerr } = await sb.rpc('replace_credentials', { p_rows: rows });   // une seule opération : tout ou rien
+      if (rerr) throw new Error(/replace_credentials/.test(rerr.message || '') ? 'Lance supabase-ameliorations.sql dans Supabase (import tout-ou-rien), puis réessaie.' : rerr.message);
       await loadCreds(); cMsg(`Import terminé : ${shS.length} magasin(s), ${rows.length} identifiant(s).${made.length ? ' Les codes d’accès des nouveaux magasins sont dans la liste ci-dessus (ou via « Exporter en Excel »).' : ''}`, true);
     } catch (err) { cMsg(err.message || 'Import impossible.'); loadCreds(); }
+  });
+
+  // ── Statistiques ──
+  $('#stBtn').addEventListener('click', () => { $('#stdlg').showModal(); loadStats(); });
+  $('#stClose').addEventListener('click', () => $('#stdlg').close());
+  $('#stDays').addEventListener('change', loadStats);
+  async function loadStats() {
+    const box = $('#stBody'); box.innerHTML = '<div class="empty">Chargement…</div>';
+    const { data, error } = await sb.rpc('get_stats', { p_days: Number($('#stDays').value) });
+    if (error) { box.innerHTML = `<div class="empty">Statistiques indisponibles : lance supabase-ameliorations.sql dans Supabase.<br><small>${esc(error.message)}</small></div>`; return; }
+    const names = {}; tools.forEach(t => { names[t.id] = t.name; });
+    const vnames = {};
+    Object.entries(videos).forEach(([k, list]) => list.forEach(v => { vnames[v.id] = v.title + (k === 'general' ? '' : ' · ' + (names[k] || '')); }));
+    const block = (kind, label, dict) => {
+      const l = data.filter(r => r.kind === kind), max = Math.max(1, ...l.map(r => Number(r.n)));
+      return `<h4>${label}</h4>` + (l.length ? l.slice(0, 15).map(r => `<div class="srow"><span class="sn">${esc(dict[r.ref] || 'Élément supprimé')}</span><span class="sbarw"><span class="sbar" style="width:${Math.round(Number(r.n) / max * 100)}%"></span></span><b>${esc(r.n)}</b></div>`).join('') : '<div class="empty">Rien pour l’instant.</div>');
+    };
+    box.innerHTML = block('open', 'Outils les plus ouverts', names) + block('video', 'Vidéos les plus lues', vnames);
+  }
+
+  // ── Bandeau d'annonce ──
+  $('#bnBtn').addEventListener('click', async () => {
+    $('#bndlg').showModal(); $('#bnMsg').textContent = ''; $('#bn_text').value = '';
+    const { data, error } = await sb.from('settings').select('value').eq('key', 'banner').maybeSingle();
+    if (error) { $('#bnMsg').textContent = 'Lance supabase-ameliorations.sql dans Supabase. (' + error.message + ')'; return; }
+    $('#bn_text').value = data ? data.value : '';
+  });
+  $('#bnClose').addEventListener('click', () => $('#bndlg').close());
+  async function saveBanner(v) {
+    const { error } = await sb.from('settings').upsert({ key: 'banner', value: v });
+    if (error) { $('#bnMsg').textContent = error.message; return; }
+    toast(v ? 'Bandeau publié.' : 'Bandeau retiré.'); $('#bndlg').close();
+  }
+  $('#bnSave').addEventListener('click', () => saveBanner($('#bn_text').value.trim()));
+  $('#bnClear').addEventListener('click', () => { $('#bn_text').value = ''; saveBanner(''); });
+
+  // ── Sauvegarde (outils, vidéos, réglages). Les identifiants s'exportent en Excel. ──
+  $('#bkBtn').addEventListener('click', async () => {
+    const [a, b, c] = await Promise.all([
+      sb.from('tools').select('*').order('position'), sb.from('tool_videos').select('*').order('position'), sb.from('settings').select('*')]);
+    if (a.error) return toast('Erreur : ' + a.error.message);
+    const d = new Date(), name = `aelytheque-sauvegarde-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.json`;
+    const blob = new Blob([JSON.stringify({ exporte_le: d.toISOString(), outils: a.data, videos: b.data || [], reglages: c.data || [] }, null, 2)], { type: 'application/json' });
+    const u = URL.createObjectURL(blob), l = document.createElement('a');
+    l.href = u; l.download = name; l.click(); setTimeout(() => URL.revokeObjectURL(u), 2000);
+    toast('Sauvegarde téléchargée (outils + vidéos). Les identifiants : « Exporter en Excel ».');
   });
 
   boot();

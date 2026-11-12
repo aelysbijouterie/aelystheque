@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Proposition A — Launchpad</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;font-family:'DM Sans',sans-serif;color:#fff;overflow:hidden;
+ background:
+  radial-gradient(60% 50% at 20% 15%,rgba(201,160,74,.55),transparent 70%),
+  radial-gradient(55% 60% at 85% 80%,rgba(59,110,143,.6),transparent 70%),
+  radial-gradient(40% 40% at 70% 10%,rgba(168,123,39,.35),transparent 70%),
+  linear-gradient(160deg,#16294a,#0a1424);}
+.veil{position:fixed;inset:0;backdrop-filter:blur(40px) saturate(1.3);background:rgba(10,20,36,.25)}
+.stage{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:52px 24px 30px}
+.brand{font-family:'Playfair Display',serif;font-size:1.05rem;letter-spacing:.4px;opacity:.9;margin-bottom:22px}
+.search{display:flex;align-items:center;gap:8px;width:min(260px,100%);padding:7px 14px;border-radius:12px;
+ background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(20px);
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.18);font-size:.82rem;color:rgba(255,255,255,.75)}
+.search svg{width:14px;height:14px;opacity:.8}
+.grid{flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:44px 10px;width:min(900px,100%);
+ align-content:start;justify-items:center;margin-top:64px}
+.app{width:112px;text-align:center}
+.ico{width:96px;height:96px;margin:0 auto 10px;border-radius:24px;position:relative;overflow:hidden;display:flex;align-items:center;
+ justify-content:center;font-size:2.8rem;box-shadow:0 10px 24px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.35);
+ transition:transform .2s cubic-bezier(.2,.8,.2,1)}
+.app:hover .ico{transform:scale(1.1)}
+.app b{display:block;font-size:.82rem;font-weight:500;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.app small{display:block;font-size:.68rem;opacity:.7;margin-top:2px}
+.g1{background:linear-gradient(155deg,#C9A04A,#6e501a)}
+.g2{background:linear-gradient(155deg,#4c8fb8,#1d4560)}
+.g3{background:linear-gradient(155deg,#8c6bd0,#3b2a73)}
+.locked .ico{background:linear-gradient(155deg,#3B6E8F,#1c3a50)}
+.locked .ico::before{content:"";position:absolute;inset:-20%;background:radial-gradient(circle at 30% 30%,#e8c46a,#c56a8a 55%,#4c6fd0);filter:blur(14px)}
+.lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:rgba(10,20,36,.45);backdrop-filter:blur(2px)}
+.lock svg{width:15px;height:15px;opacity:.9}
+.cd{font-size:.88rem;font-weight:500;font-variant-numeric:tabular-nums}
+.at{font-size:.55rem;letter-spacing:.8px;text-transform:uppercase;opacity:.85}
+.locked b,.locked small{filter:blur(5px)}
+.dots{display:flex;gap:9px;padding-top:20px}
+.dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35)}.dots i:first-child{background:#fff}
+</style></head><body><div class="veil"></div>
+<div class="stage">
+ <div class="brand">Aélythèque</div>
+ <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Rechercher</div>
+ <div class="grid">
+  <div class="app"><div class="ico g1">📚</div><b>Aurel'IA</b><small>Procédures</small></div>
+  <div class="app"><div class="ico g2">🔍</div><b>SIMONE</b><small>Références</small></div>
+  <div class="app"><div class="ico g3">🖼️</div><b>TEMPO</b><small>Visuels magasin</small></div>
+  <div class="app locked"><div class="ico"><div class="lock">
+   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+   <span class="cd" id="cd">03:00:00</span><span class="at">dès 17:00</span></div></div>
+   <b>Nouvel outil</b><small>Bientôt disponible</small></div>
+ </div>
+ <div class="dots"><i></i><i></i></div>
+</div>
+<script>const t=Date.now()+3*3600e3;const p=n=>String(n).padStart(2,'0');
+setInterval(()=>{const s=Math.max(0,(t-Date.now())/1000|0);document.getElementById('cd').textContent=`${p(s/3600|0)}:${p(s%3600/60|0)}:${p(s%60)}`},1000)</script>
+</body></html>

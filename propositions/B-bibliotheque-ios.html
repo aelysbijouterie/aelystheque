@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Proposition B — Bibliothèque d'apps</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;font-family:'DM Sans',sans-serif;color:#112033;
+ background:radial-gradient(70% 45% at 15% 0%,#f4e3bd,transparent 70%),radial-gradient(60% 50% at 100% 100%,#d9e4ee,transparent 70%),#F5F1EE}
+.wrap{max-width:560px;margin:0 auto;padding:54px 20px 40px}
+h1{font-size:2rem;font-weight:600;letter-spacing:-.5px;margin-bottom:14px}
+.search{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;background:rgba(118,118,128,.12);
+ color:#7a7068;font-size:.95rem;margin-bottom:26px}
+.search svg{width:16px;height:16px}
+.folders{display:grid;grid-template-columns:1fr 1fr;gap:26px 18px}
+.folder{text-align:center}
+.box{aspect-ratio:1;border-radius:30px;padding:14%;background:rgba(255,255,255,.55);backdrop-filter:blur(24px);
+ border:1px solid rgba(255,255,255,.8);box-shadow:0 8px 24px rgba(17,32,51,.08),inset 0 1px 0 #fff;
+ display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12%}
+.mini{border-radius:22%;display:flex;align-items:center;justify-content:center;font-size:1.9rem;position:relative;overflow:hidden;
+ box-shadow:0 2px 6px rgba(17,32,51,.18)}
+.g1{background:linear-gradient(155deg,#C9A04A,#7a561b)}
+.g2{background:linear-gradient(155deg,#4c8fb8,#1d4560)}
+.g3{background:linear-gradient(155deg,#8c6bd0,#3b2a73)}
+.soon{background:linear-gradient(155deg,#e8c46a,#c56a8a 60%,#4c6fd0)}
+.soon::after{content:"";position:absolute;inset:0;backdrop-filter:blur(7px);background:rgba(17,32,51,.3)}
+.soon span{position:relative;z-index:1;color:#fff;font-size:.62rem;font-weight:600;font-variant-numeric:tabular-nums;text-align:center;line-height:1.15}
+.folder p{margin-top:9px;font-size:.82rem;font-weight:500}
+.folder small{display:block;color:#7a7068;font-size:.7rem;margin-top:1px}
+.badge{display:inline-block;margin-top:3px;font-size:.62rem;font-weight:600;color:#A87B27;background:#f6ecd6;padding:2px 8px;border-radius:99px;filter:none}
+.suggest{margin-bottom:26px}
+.suggest h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.8px;color:#7a7068;margin-bottom:10px;font-weight:600}
+.row{display:flex;gap:14px}
+.row .mini{width:62px;height:62px;flex:none;font-size:1.8rem}
+</style></head><body><div class="wrap">
+ <h1>Bibliothèque</h1>
+ <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Outils Aélys</div>
+ <div class="suggest"><h2>Suggestions</h2><div class="row">
+  <div class="mini g1">📚</div><div class="mini g2">🔍</div><div class="mini g3">🖼️</div></div></div>
+ <div class="folders">
+  <div class="folder"><div class="box"><div class="mini g1">📚</div></div><p>Procédures</p><small>1 outil</small></div>
+  <div class="folder"><div class="box"><div class="mini g2">🔍</div></div><p>Recherche</p><small>1 outil</small></div>
+  <div class="folder"><div class="box"><div class="mini g3">🖼️</div></div><p>Visuels</p><small>1 outil</small></div>
+  <div class="folder"><div class="box"><div class="mini soon"><span id="cd">03:00<br>:00</span></div></div><p>À venir</p><span class="badge">Dès 17:00</span></div>
+ </div>
+</div>
+<script>const t=Date.now()+3*3600e3,p=n=>String(n).padStart(2,'0');
+setInterval(()=>{const s=Math.max(0,(t-Date.now())/1000|0);document.getElementById('cd').innerHTML=`${p(s/3600|0)}:${p(s%3600/60|0)}<br>:${p(s%60)}`},1000)</script>
+</body></html>

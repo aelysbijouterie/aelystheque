@@ -4,14 +4,19 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#cfc6b6" />
-<title>Aélysthèque</title>
+<title>Aélythèque</title>
+<meta name="description" content="Aélythèque : tous les outils internes Aélys Bijouterie, au même endroit." />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Aélythèque" />
+<meta property="og:description" content="Tous les outils internes Aélys Bijouterie, au même endroit." />
+<meta property="og:image" content="https://aelystheque.vercel.app/wallpaper.jpg" />
+<meta name="twitter:card" content="summary" />
   <link rel="icon" type="image/x-icon" href="favicon.ico" />
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<link rel="preload" href="fonts/playfair-display-61a96359.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="stylesheet" href="fonts/fonts.css" />
 <style>
   :root {
     --ink: #2f2519;
@@ -46,6 +51,13 @@
     transform: translate3d(var(--px, 0px), var(--py, 0px), 0);
     transition: transform .8s cubic-bezier(.2,.7,.2,1); will-change: transform; }
 
+  @media (max-width: 760px) {
+    .wallpaper { background-image:
+      radial-gradient(120% 70% at 85% 0%, rgba(255,246,226,.75), transparent 60%),
+      radial-gradient(90% 60% at 0% 100%, rgba(150,132,104,.35), transparent 65%),
+      linear-gradient(160deg, #dcd1bd 0%, #cbbea6 50%, #b9a98b 100%); }
+  }
+
   /* ── Widget heure (façon iPadOS) ─────────────────────────────── */
   .widget { position: fixed; top: 28px; left: 28px; z-index: 4; width: 250px; padding: 16px; border-radius: 26px; display: grid; gap: 12px; }
   .wd-top { display: flex; align-items: center; gap: 14px; }
@@ -67,6 +79,7 @@
   /* ── En-tête ─────────────────────────────────────────────────── */
   header { padding: 60px 24px 6px; text-align: center; }
   header .wordmark {
+    margin: 0;
     font-family: 'Playfair Display', serif;
     font-weight: 600;
     font-size: clamp(2rem, 5.5vw, 2.7rem);
@@ -103,6 +116,7 @@
   #search:focus { box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 0 0 3px rgba(255,255,255,.18), 0 10px 30px rgba(var(--shadow),.28); }
 
   /* ── À la une : nouveautés et prochaine sortie ───────────────── */
+  .banner { width: calc(100% - 48px); max-width: 560px; margin: 16px auto 0; padding: 10px 18px; border-radius: 18px; text-align: center; font-size: .84rem; line-height: 1.4; color: var(--ink); }
   .news { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 16px 24px 0; min-height: 16px; }
   .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 13px; border-radius: 999px; font-size: .74rem; font-weight: 500;
     color: var(--ink); text-decoration: none; }
@@ -117,14 +131,12 @@
   /* ── Grille Launchpad ────────────────────────────────────────── */
   main { max-width: 860px; margin: 0 auto; padding: 38px 24px 110px; }
   .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    display: flex; flex-wrap: wrap; justify-content: center;
     gap: 40px 14px;
-    justify-items: center;
   }
   .tool {
     display: flex; flex-direction: column; align-items: center; gap: 9px;
-    width: 100%; max-width: 112px;
+    width: 100%; max-width: 112px; flex: none;
     text-decoration: none; color: inherit;
     user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
   }
@@ -281,6 +293,8 @@
   .libbtn svg { width: 15px; height: 15px; fill: none; stroke: #A87B27; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .libbtn .libcount { min-width: 20px; padding: 1px 7px; border-radius: 99px; font-size: .68rem; font-weight: 700; text-align: center; color: #fff;
     background: linear-gradient(180deg, #EBC06A, #A87B27); }
+  .cdot { display: none; width: 8px; height: 8px; border-radius: 50%; background: #2F9E5B; box-shadow: 0 0 0 2px rgba(255,255,255,.8); }
+  #credBtn.unlocked .cdot { display: inline-block; }
   .libbtn:focus-visible, .libclose:focus-visible, .chip:focus-visible, .vcard:focus-visible { outline: 2px solid rgba(47,37,25,.55); outline-offset: 2px; }
 
   .libback { position: fixed; inset: 0; z-index: 69; background: rgba(30,22,12,.28); opacity: 0; visibility: hidden;
@@ -375,7 +389,8 @@
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
   @media (max-width: 420px) {
-    .grid { grid-template-columns: repeat(3, 1fr); gap: 34px 8px; }
+    .grid { gap: 34px 8px; }
+    .tool { max-width: 100px; }
     .tool-icon { width: 80px; height: 80px; border-radius: 23px; }
   }
 </style>
@@ -388,7 +403,7 @@
 <div class="topbtns">
   <button class="libbtn glass" id="credBtn" type="button" aria-expanded="false" aria-controls="cred">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8 20 3m-3 3 3 3m-6-0 2 2"/></svg>
-    Accès
+    Accès<span class="cdot" aria-hidden="true"></span>
   </button>
   <button class="libbtn glass" id="libBtn" type="button" aria-expanded="false" aria-controls="lib" hidden>
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M10 8.5v7l6-3.5z"/></svg>
@@ -416,7 +431,7 @@
 </aside>
 
 <header>
-  <div class="wordmark">Aélythèque</div>
+  <h1 class="wordmark">Aélythèque</h1>
   <div class="rule"></div>
   <p>Tous les outils internes Aélys, au même endroit.</p>
 </header>
@@ -428,6 +443,7 @@
   </div>
 </div>
 
+<div class="banner glass" id="banner" role="status" hidden></div>
 <div class="news" id="news" aria-live="polite"></div>
 
 <main>
@@ -465,7 +481,7 @@
     <input class="cin" id="credCode" type="password" placeholder="Code du magasin" aria-label="Code du magasin" autocomplete="off" />
     <button class="cbtn" id="credGo" type="submit">Afficher mes identifiants</button>
     <div class="cerr" id="credErr" role="alert"></div>
-    <div class="cnote">Le code de ton magasin t’a été donné par la direction. Seuls les identifiants de ton magasin s’affichent.</div>
+    <div class="cnote">Le code de ton magasin t’a été donné par la direction. Seuls les identifiants de ton magasin s’affichent. Code oublié ? Demande-le à ta direction.</div>
   </form>
   <div id="credView" hidden>
     <div class="credtop"><b id="credStore"></b><button class="clink" id="credLock" type="button">Verrouiller</button></div>
@@ -485,17 +501,6 @@
 
 <script src="config.js"></script>
 <script>
-  // ═══════════════════════════════════════════════════════════════
-  //  La liste des outils est gérée depuis admin.html.
-  //  Cette liste n'est qu'un FILET DE SÉCURITÉ : affichée seulement
-  //  si la base est injoignable et qu'aucune copie n'est en mémoire.
-  // ═══════════════════════════════════════════════════════════════
-  const FALLBACK = [
-    { id: 'f1', name: "Aurel'IA", desc: "Bibliothèque de procédures", url: "https://chatbot-alpha-sepia-22.vercel.app/", icon: "📚", image: "aureil-ia-icon.jpg", color: "#A87B27" },
-    { id: 'f2', name: "SIMONE", desc: "Recherche de références SIMONE A BORDEAUX", url: "https://recherche-reference-simone.netlify.app/", icon: "🔍", image: "simone-icon.jpg", color: "#A87B27" },
-    { id: 'f3', name: "TEMPO", desc: "Gestion des visuels opérations magasin", url: "https://pac-aelys.vercel.app/connexion-boutique", icon: "🖼️", image: "tempo.jpg", color: "#A87B27" }
-  ];
-
   const CFG = window.AELYS_CONFIG || {};
   const CACHE_KEY = 'aelytheque.tools.v1';
   const NEW_DAYS = 7;
@@ -506,6 +511,8 @@
   let general = [];          // tutos non liés à un outil
   let offset = 0;            // horloge serveur - horloge de l'appareil
   let reloading = false;
+  let loadFailed = false;
+  let banner = '';
   let introDone = false;
   let lastHtml = '';
   let lockedPrev = new Set();
@@ -548,6 +555,16 @@
     const t = $('toast'); t.textContent = msg; t.classList.add('show');
     clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), 2400);
   }
+  function track(kind, ref) {
+    if (!CFG.supabaseUrl || !ref || String(ref).startsWith('f')) return;
+    try {
+      fetch(`${CFG.supabaseUrl}/rest/v1/rpc/track`, {
+        method: 'POST', keepalive: true,
+        headers: { apikey: CFG.supabaseAnonKey, Authorization: `Bearer ${CFG.supabaseAnonKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_kind: kind, p_ref: String(ref) })
+      }).catch(() => {});
+    } catch (e) {}
+  }
   const findTool = id => tools.find(t => t.id === id);
   const isNew = t => !t.locked && t.releaseAt && nowMs() >= t.releaseAt && nowMs() - t.releaseAt < NEW_DAYS * 864e5;
 
@@ -575,6 +592,8 @@
       offset = new Date(data.now).getTime() - Date.now();
       tools = data.tools.map(normalize);
       general = Array.isArray(data.general) ? data.general : [];
+      banner = typeof data.banner === 'string' ? data.banner : '';
+      loadFailed = false;
       try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
     } catch (e) {
       let cached = null;
@@ -583,8 +602,10 @@
         offset = new Date(cached.now).getTime() - Date.now();
         tools = cached.tools.map(normalize);
         general = Array.isArray(cached.general) ? cached.general : [];
+        banner = typeof cached.banner === 'string' ? cached.banner : '';
       } else {
-        tools = FALLBACK;
+        tools = []; loadFailed = true;
+        setTimeout(refresh, 15000);          // on réessaie tout seul
       }
     }
   }
@@ -640,10 +661,11 @@
       ((t.name || '').toLowerCase().includes(q) || (t.desc || '').toLowerCase().includes(q)));
 
     renderNews(); scheduleRelease(); renderLibBtn();
+    { const bn = $('banner'); bn.textContent = banner; bn.hidden = !banner; }
 
     if (tools.length === 0 || list.length === 0) {
       grid.innerHTML = ''; lastHtml = '';
-      emptyMsg.textContent = tools.length === 0 ? 'Aucun outil pour l’instant.' : 'Aucun outil ne correspond à cette recherche.';
+      emptyMsg.textContent = tools.length === 0 ? (loadFailed ? 'Service momentanément indisponible. Nouvelle tentative dans un instant…' : 'Aucun outil pour l’instant.') : 'Aucun outil ne correspond à cette recherche.';
       emptyMsg.style.display = 'block';
       return;
     }
@@ -665,7 +687,8 @@
   // Apparition en vague : diagonale depuis le coin haut-gauche
   function startIntro() {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const cols = Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(' ').length);
+    const top0 = grid.children.length ? grid.children[0].offsetTop : 0;
+    const cols = Math.max(1, [...grid.children].filter(c => c.offsetTop === top0).length);
     [...grid.children].forEach((el, i) => {
       el.style.setProperty('--d', (140 + (Math.floor(i / cols) + (i % cols)) * 85) + 'ms');
     });
@@ -818,6 +841,7 @@
 
   // ── Reflet de verre qui suit le pointeur + parallaxe du fond ────
 
+  grid.addEventListener('click', e => { const a = e.target.closest('a.tool-link'); if (a) track('open', a.closest('.tool').dataset.id); });
   grid.addEventListener('pointermove', e => {
     const ic = e.target.closest && e.target.closest('.tool-icon'); if (!ic) return;
     const r = ic.getBoundingClientRect();
@@ -901,10 +925,11 @@
     const list = $('vlist'); list.innerHTML = '';
     if (items.length > 1 && items.length <= 8) items.forEach((v, k) => {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = `${k + 1} · ${v.title || 'Vidéo ' + (k + 1)}`;
-      b.addEventListener('click', () => playVideo(k)); list.appendChild(b);
+      b.addEventListener('click', () => { playVideo(k); track('video', items[k].id); }); list.appendChild(b);
     });
     vmodal.hidden = false; document.body.style.overflow = 'hidden';
     playVideo(start || 0);
+    track('video', items[start || 0].id);
     $('vclose').focus({ preventScroll: true });
   }
   function openVideos(id, start, opener) {
@@ -997,7 +1022,8 @@
   // Rien n'est stocké dans la page : le serveur ne renvoie que les identifiants du magasin dont on donne le code.
 
   const credEl = $('cred'), credBack = $('credBack');
-  let credData = null, credCode = null;
+  let credData = null, credCode = null, credTimer = null;
+  const CRED_IDLE = 5 * 60 * 1000;               // verrouillage automatique 5 min après la fermeture
   const CRED_KEY = 'aelytheque.cred.v1';          // sessionStorage : s'efface à la fermeture de l'onglet
 
   async function fetchCreds(code) {
@@ -1012,12 +1038,14 @@
   }
   function showCredView() {
     $('credGate').hidden = true; $('credView').hidden = false;
+    $('credBtn').classList.add('unlocked');
     $('credStore').textContent = '🏬 ' + credData.store;
     $('credSub').textContent = 'Les accès aux applis de ton magasin.';
     renderCred();
   }
   function showCredGate() {
-    credData = null; credCode = null;
+    credData = null; credCode = null; clearTimeout(credTimer);
+    $('credBtn').classList.remove('unlocked');
     try { sessionStorage.removeItem(CRED_KEY); } catch (e) {}
     $('credView').hidden = true; $('credGate').hidden = false;
     $('credCode').value = ''; $('credErr').textContent = ''; $('credList').innerHTML = ''; $('credSearch').value = '';
@@ -1031,7 +1059,7 @@
       const t = c.tool_id ? findTool(c.tool_id) : null;
       const bg = t ? tileBackground(t.color) : '';
       const ic = t && t.image ? `<img src="${escapeHtml(t.image)}" alt="" draggable="false" />` : escapeHtml((t && t.icon) || '🔑');
-      const open = t && t.url ? `<a class="copen" href="${escapeHtml(t.url)}" target="_blank" rel="noopener">Ouvrir ↗</a>` : '';
+      const open = t && t.url ? `<a class="copen" href="${escapeHtml(safeUrl(t.url))}" target="_blank" rel="noopener">Ouvrir ↗</a>` : '';
       const row = (k, v, kind) => v ? `<div class="crow"><span class="k">${k}</span><span class="v" data-kind="${kind}">${kind === 'pw' ? '••••••••' : escapeHtml(v)}</span>
           ${kind === 'pw' ? '<button class="cmini" type="button" data-a="eye">Afficher</button>' : ''}<button class="cmini" type="button" data-a="copy">Copier</button></div>` : '';
       return `<div class="ccard" data-i="${credData.items.indexOf(c)}">
@@ -1053,6 +1081,7 @@
     ta.remove();
   }
   async function openCred() {
+    clearTimeout(credTimer);
     credEl.inert = false; credEl.setAttribute('aria-hidden', 'false');
     credEl.classList.add('open'); credBack.classList.add('open'); $('credBtn').setAttribute('aria-expanded', 'true');
     if (!credData) {
@@ -1068,6 +1097,7 @@
     credEl.classList.remove('open'); credBack.classList.remove('open'); $('credBtn').setAttribute('aria-expanded', 'false');
     credEl.inert = true; credEl.setAttribute('aria-hidden', 'true');
     $('credBtn').focus({ preventScroll: true });
+    clearTimeout(credTimer); if (credData) credTimer = setTimeout(showCredGate, CRED_IDLE);
   }
   $('credBtn').addEventListener('click', () => credEl.classList.contains('open') ? closeCred() : openCred());
   $('credClose').addEventListener('click', closeCred);
@@ -1101,6 +1131,7 @@
   // ── Démarrage ───────────────────────────────────────────────────
 
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+  setInterval(() => { if (!document.hidden) refresh(); }, 5 * 60 * 1000);
   buildTicks();
   setInterval(tick, 1000);
   try {                                            // copie locale d'abord : jamais d'écran vide

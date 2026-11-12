@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#cfc6b6" />
+<title>Aélysthèque</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #2f2519;
+    --ink-soft: rgba(47,37,25,.62);
+    --glass: rgba(255,255,255,.34);
+    --glass-edge: rgba(255,255,255,.75);
+    --gold-light: #A87B27;
+    --shadow: 70,52,28;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; color-scheme: light; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #cfc6b6;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', 'DM Sans', sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  [hidden] { display: none !important; }
+  .glass {
+    border: 1px solid var(--glass-edge);
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8); backdrop-filter: blur(24px) saturate(1.8);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 10px 30px rgba(var(--shadow),.22);
+  }
+
+  /* ── Fond d'écran Apple « champagne » + parallaxe ────────────── */
+  .wallpaper { position: fixed; inset: -26px; z-index: -1; background-color: #cfc6b6;
+    background-image: url("wallpaper.jpg");
+    background-size: cover; background-position: center; background-repeat: no-repeat;
+    transform: translate3d(var(--px, 0px), var(--py, 0px), 0);
+    transition: transform .8s cubic-bezier(.2,.7,.2,1); will-change: transform; }
+
+  /* ── Widget heure (façon iPadOS) ─────────────────────────────── */
+  .widget { position: fixed; top: 28px; left: 28px; z-index: 4; width: 250px; padding: 16px; border-radius: 26px; display: grid; gap: 12px; }
+  .wd-top { display: flex; align-items: center; gap: 14px; }
+  .wd-clock { width: 68px; height: 68px; flex: none; }
+  .wd-clock .face { fill: rgba(255,255,255,.62); stroke: rgba(255,255,255,.95); stroke-width: 1; }
+  .wd-clock .tick { stroke: rgba(47,37,25,.45); stroke-width: 1; stroke-linecap: round; }
+  .wd-clock .tick.big { stroke: rgba(47,37,25,.8); stroke-width: 1.6; }
+  .wd-clock .hand { transform-origin: 32px 32px; transition: transform .35s cubic-bezier(.4,2.2,.6,1); }
+  .wd-clock .h, .wd-clock .m { stroke: #2f2519; stroke-linecap: round; }
+  .wd-clock .s { stroke: #A87B27; stroke-width: 1.2; stroke-linecap: round; }
+  .wd-day { font-size: .64rem; letter-spacing: .9px; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; }
+  .wd-date { font-size: 1.12rem; font-weight: 600; line-height: 1.15; }
+  .wd-time { font-size: .82rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .wd-next { border-top: 1px solid rgba(255,255,255,.75); padding-top: 10px; font-size: .68rem; color: var(--ink-soft);
+    display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .wd-next b { font-size: .95rem; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+  @media (max-width: 1180px) { .widget { display: none; } }
+
+  /* ── En-tête ─────────────────────────────────────────────────── */
+  header { padding: 60px 24px 6px; text-align: center; }
+  header .wordmark {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: clamp(2rem, 5.5vw, 2.7rem);
+    letter-spacing: .3px;
+    text-shadow: 0 2px 24px rgba(255,255,255,.5);
+  }
+  header .rule { width: 40px; height: 2px; background: var(--gold-light); margin: 14px auto; border-radius: 2px; opacity: .9; }
+  header p { margin: 0 auto; max-width: 380px; color: var(--ink-soft); font-size: .88rem; line-height: 1.4; }
+
+  /* ── Recherche ───────────────────────────────────────────────── */
+  .search-wrap { display: flex; justify-content: center; padding: 30px 24px 4px; }
+  .sbox { position: relative; width: 100%; max-width: 280px; transition: max-width .3s cubic-bezier(.2,.8,.2,1); }
+  .sbox:focus-within { max-width: 360px; }
+  .sbox kbd { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;
+    font: 500 .68rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; color: var(--ink-soft);
+    padding: 2px 7px; border-radius: 6px; background: rgba(255,255,255,.45); border: 1px solid rgba(255,255,255,.7); }
+  .sbox:focus-within kbd { display: none; }
+  #search {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border-radius: 999px;
+    border: 1px solid var(--glass-edge);
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f2519' stroke-opacity='.6' stroke-width='2.2' stroke-linecap='round'><circle cx='11' cy='11' r='7'/><path d='m20 20-3.5-3.5'/></svg>") no-repeat 15px 50% / 16px,
+      var(--glass);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8); backdrop-filter: blur(24px) saturate(1.8);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.38), inset 0 -1px 0 rgba(255,255,255,.06), 0 8px 24px rgba(var(--shadow),.22);
+    font: 400 .9rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'DM Sans', sans-serif;
+    color: var(--ink);
+    outline: none;
+    transition: background-color .2s ease, box-shadow .2s ease;
+  }
+  #search::placeholder { color: rgba(47,37,25,.5); }
+  #search:focus { box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 0 0 3px rgba(255,255,255,.18), 0 10px 30px rgba(var(--shadow),.28); }
+
+  /* ── À la une : nouveautés et prochaine sortie ───────────────── */
+  .news { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 16px 24px 0; min-height: 16px; }
+  .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 13px; border-radius: 999px; font-size: .74rem; font-weight: 500;
+    color: var(--ink); text-decoration: none; }
+  .pill.new { position: relative; overflow: hidden; }
+  .pill.new::before { content: "✦"; color: #A87B27; }
+  .pill.new::after { content: ""; position: absolute; inset: 0; transform: translateX(-120%);
+    background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.85) 50%, transparent 70%);
+    animation: shimmer 3.4s ease-in-out infinite; }
+  .pill.soon::before { content: "◷"; color: var(--ink-soft); }
+  @keyframes shimmer { 0%, 55% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+
+  /* ── Grille Launchpad ────────────────────────────────────────── */
+  main { max-width: 860px; margin: 0 auto; padding: 38px 24px 110px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: 40px 14px;
+    justify-items: center;
+  }
+  .tool {
+    display: flex; flex-direction: column; align-items: center; gap: 9px;
+    width: 100%; max-width: 112px;
+    text-decoration: none; color: inherit;
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  }
+
+  /* Apparition en vague, en diagonale, au premier affichage */
+  .grid.intro .tool { opacity: 0; animation: wave .75s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: var(--d, 0ms); }
+  @keyframes wave {
+    from { opacity: 0; transform: translateY(30px) scale(.8); filter: blur(7px); }
+    60%  { filter: blur(0); }
+    to   { opacity: 1; transform: none; filter: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .grid.intro .tool { animation: none; opacity: 1; }
+    .tool.reveal .tool-icon, .pill.new::after { animation: none !important; }
+    .wallpaper { transition: none; }
+  }
+
+  .ti { position: relative; line-height: 0; }
+
+  /* Icône « liquid glass » */
+  .tool-icon {
+    width: 94px; height: 94px;
+    border-radius: 27px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.4rem; line-height: 1;
+    background: var(--tile-bg, linear-gradient(155deg, #4a6fa8, #1b2f55));
+    position: relative; overflow: hidden;
+    box-shadow:
+      0 14px 30px rgba(var(--shadow),.38),
+      0 2px 6px rgba(var(--shadow),.28),
+      inset 0 0 0 1px rgba(255,255,255,.26),
+      inset 0 1.5px 1px rgba(255,255,255,.6),
+      inset 0 -12px 20px rgba(255,255,255,.07);
+    transition: transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease;
+  }
+  .tool-icon img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; -webkit-user-drag: none; }
+  .tool-icon::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3;
+    background:
+      radial-gradient(120% 75% at var(--mx, 25%) var(--my, -10%), rgba(255,255,255,.6), rgba(255,255,255,0) 58%),
+      linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,0) 40%);
+    mix-blend-mode: soft-light;
+  }
+  .tool:hover .tool-icon {
+    transform: translateY(-4px) scale(1.08);
+    box-shadow: 0 22px 44px rgba(var(--shadow),.45), 0 4px 10px rgba(var(--shadow),.3),
+      inset 0 0 0 1px rgba(255,255,255,.34), inset 0 1.5px 1px rgba(255,255,255,.7), inset 0 -12px 20px rgba(255,255,255,.1);
+  }
+  .tool:active .tool-icon { transform: scale(.93); transition-duration: .08s; }
+  .tool-link:focus-visible .tool-icon { outline: 3px solid rgba(47,37,25,.45); outline-offset: 3px; }
+
+  .tool-name { font-size: .8rem; font-weight: 500; text-align: center; line-height: 1.25; max-width: 108px; text-shadow: 0 1px 8px rgba(255,255,255,.55); }
+  .tool-desc { font-size: .66rem; color: var(--ink-soft); text-align: center; line-height: 1.25; max-width: 108px;
+    text-shadow: 0 1px 6px rgba(255,255,255,.5); margin-top: -5px; }
+
+  /* Pastille « Nouveau » */
+  .badge-new { position: absolute; top: -7px; right: -10px; z-index: 4; padding: 3px 8px; border-radius: 99px; line-height: 1.3;
+    font-size: .54rem; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; color: #fff;
+    background: linear-gradient(180deg, #EBC06A, #A87B27);
+    box-shadow: 0 4px 10px rgba(168,123,39,.5), inset 0 1px 0 rgba(255,255,255,.6); }
+
+  /* ── Outil pas encore sorti ──────────────────────────────────── */
+  .tool.locked { cursor: default; }
+  .tool.locked:hover .tool-icon, .tool.locked:active .tool-icon { transform: none; }
+  .tool-icon .teaser { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    filter: blur(8px) saturate(1.3); transform: scale(1.5); }
+  .lock {
+    position: absolute; inset: 0; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    background: rgba(var(--shadow),.40);
+    -webkit-backdrop-filter: blur(3px) saturate(1.4); backdrop-filter: blur(3px) saturate(1.4);
+    text-align: center; padding: 4px; color: #fff; transition: background .4s ease;
+  }
+  .lock .cd { font-size: .86rem; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: .2px; line-height: 1.1; text-shadow: 0 1px 8px rgba(var(--shadow),.4); }
+  .lock .at { font-size: .54rem; letter-spacing: .8px; text-transform: uppercase; opacity: .9; line-height: 1.2; }
+  .lock svg { width: 14px; height: 14px; opacity: .92; }
+  .lock.final { background: rgba(168,123,39,.55); }
+  .lock.final .cd { animation: beat 1s ease-in-out infinite; }
+  @keyframes beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.22); } }
+  .blur { filter: blur(5px); user-select: none; pointer-events: none; }
+
+  /* Révélation en direct */
+  .tool.reveal .tool-icon { animation: unveil 1.3s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes unveil {
+    0%   { filter: blur(14px) brightness(1.7); transform: scale(1.3); }
+    55%  { filter: blur(0) brightness(1.25); transform: scale(1.08); }
+    100% { filter: none; transform: none; }
+  }
+  .burst { position: fixed; width: 0; height: 0; z-index: 60; pointer-events: none; }
+  .burst .ring { position: absolute; left: -48px; top: -48px; width: 96px; height: 96px; border-radius: 50%;
+    border: 2px solid rgba(255,238,200,.95);
+    box-shadow: 0 0 34px rgba(232,185,85,.85), inset 0 0 30px rgba(255,238,200,.7);
+    animation: ring 1.2s cubic-bezier(.2,.7,.2,1) forwards; }
+  .burst .ring.r2 { animation-delay: .18s; border-color: rgba(232,185,85,.8); }
+  @keyframes ring { from { transform: scale(.3); opacity: 1; } to { transform: scale(3.6); opacity: 0; } }
+  .burst .spark { position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%;
+    background: radial-gradient(circle, #fff, #E8B955); box-shadow: 0 0 10px #E8B955;
+    animation: spark 1.2s cubic-bezier(.15,.7,.2,1) forwards; }
+  @keyframes spark { from { transform: rotate(var(--a)) translateX(0) scale(1.2); opacity: 1; }
+                     to   { transform: rotate(var(--a)) translateX(var(--r)) scale(.2); opacity: 0; } }
+  .flash { position: fixed; inset: 0; z-index: 55; pointer-events: none; opacity: 0;
+    background: radial-gradient(circle at var(--fx, 50%) var(--fy, 45%), rgba(255,244,214,.9), rgba(255,244,214,0) 60%); }
+  .flash.go { animation: flash 1.6s ease-out; }
+  @keyframes flash { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
+
+  .empty { text-align: center; color: var(--ink-soft); font-size: .9rem; max-width: 380px; margin: 40px auto 0; line-height: 1.5; }
+
+  /* ── Lien vidéo sous chaque app ──────────────────────────────── */
+  .tool-link { display: flex; flex-direction: column; align-items: center; gap: 9px; width: 100%; color: inherit; text-decoration: none; }
+  .vid-link { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin-top: 1px;
+    padding: 4px 11px 4px 9px; border-radius: 999px; font: 500 .66rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+    color: var(--ink); white-space: nowrap;
+    border: 1px solid var(--glass-edge); background: rgba(255,255,255,.5);
+    -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 3px 10px rgba(var(--shadow),.14);
+    transition: transform .15s ease, background .15s ease, color .15s ease; }
+  .vid-link svg { width: 9px; height: 9px; fill: #A87B27; transition: fill .15s ease; }
+  .vid-link:hover { transform: translateY(-1px); background: #A87B27; color: #fff; }
+  .vid-link:hover svg { fill: #fff; }
+  .vid-link:focus-visible { outline: 2px solid rgba(47,37,25,.5); outline-offset: 2px; }
+
+  /* ── Lecteur vidéo ───────────────────────────────────────────── */
+  .vmodal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: rgba(30,22,12,.55); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2);
+    animation: fadein .18s ease; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+  .vpanel { position: relative; width: min(980px, 100%); max-height: 100%; overflow: auto; padding: 14px; border-radius: 28px;
+    background: rgba(255,255,255,.62); animation: pop .22s cubic-bezier(.2,.8,.2,1); }
+  .vstage { aspect-ratio: 16 / 9; background: #000; border-radius: 18px; overflow: hidden; position: relative; }
+  .vstage video, .vstage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; }
+  .verr { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    margin: 0; color: #fff; font-size: .9rem; text-align: center; padding: 20px; }
+  .verr a { color: #EBC06A; }
+  .vmeta { padding: 12px 6px 4px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .vmeta b { font-size: 1rem; font-weight: 600; }
+  .vmeta span { font-size: .78rem; color: var(--ink-soft); }
+  .vlist { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 4px 2px; }
+  .vlist:empty { display: none; }
+  .vlist button { all: unset; box-sizing: border-box; cursor: pointer; padding: 6px 14px; border-radius: 999px; font: 500 .76rem -apple-system, 'Segoe UI', sans-serif;
+    background: rgba(255,255,255,.65); border: 1px solid var(--glass-edge); color: var(--ink); }
+  .vlist button.on { background: linear-gradient(180deg, #EBC06A, #A87B27); color: #fff; }
+  .vlist button:focus-visible { outline: 2px solid rgba(47,37,25,.5); outline-offset: 2px; }
+  .vclose { position: absolute; top: 22px; right: 22px; z-index: 3; width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+    border: 1px solid rgba(255,255,255,.5); background: rgba(20,14,8,.5); color: #fff; font-size: 1.25rem; line-height: 1;
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .vclose:hover { background: rgba(20,14,8,.75); }
+
+  /* ── Onglet « Tutos » + bibliothèque ─────────────────────────── */
+  .topbtns { position: fixed; top: 28px; right: 28px; z-index: 6; display: flex; gap: 10px; align-items: center; }
+  .libbtn { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    padding: 10px 14px 10px 16px; border-radius: 999px; color: var(--ink);
+    font: 500 .82rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; transition: transform .15s ease; }
+  .libbtn:hover { transform: translateY(-1px); }
+  .libbtn svg { width: 15px; height: 15px; fill: none; stroke: #A87B27; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .libbtn .libcount { min-width: 20px; padding: 1px 7px; border-radius: 99px; font-size: .68rem; font-weight: 700; text-align: center; color: #fff;
+    background: linear-gradient(180deg, #EBC06A, #A87B27); }
+  .libbtn:focus-visible, .libclose:focus-visible, .chip:focus-visible, .vcard:focus-visible { outline: 2px solid rgba(47,37,25,.55); outline-offset: 2px; }
+
+  .libback { position: fixed; inset: 0; z-index: 69; background: rgba(30,22,12,.28); opacity: 0; visibility: hidden;
+    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); transition: opacity .3s ease, visibility 0s .3s; }
+  .libback.open { opacity: 1; visibility: visible; transition: opacity .3s ease, visibility 0s; }
+  .lib { position: fixed; top: 0; right: 0; bottom: 0; z-index: 70; width: min(640px, 100%); padding: 24px 22px 28px; overflow-y: auto;
+    border-radius: 28px 0 0 28px; background: rgba(255,255,255,.64); visibility: hidden; transform: translateX(104%);
+    transition: transform .4s cubic-bezier(.2,.8,.2,1), visibility 0s .4s; }
+  .lib.open { visibility: visible; transform: none; transition: transform .4s cubic-bezier(.2,.8,.2,1), visibility 0s; }
+  .libhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+  .libhead h2 { margin: 0; font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 600; }
+  .libhead p { margin: 4px 0 0; font-size: .8rem; color: var(--ink-soft); }
+  .libclose { flex: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 1.25rem; line-height: 1; color: var(--ink);
+    border: 1px solid var(--glass-edge); background: rgba(255,255,255,.6); }
+  .libsearch { width: 100%; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--glass-edge); background: rgba(255,255,255,.6);
+    font: 400 .88rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; color: var(--ink); outline: none; }
+  .libsearch:focus { box-shadow: 0 0 0 3px rgba(168,123,39,.25); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 18px; }
+  .chip { all: unset; box-sizing: border-box; cursor: pointer; padding: 6px 14px; border-radius: 999px; font: 500 .76rem -apple-system, 'Segoe UI', sans-serif;
+    background: rgba(255,255,255,.62); border: 1px solid var(--glass-edge); color: var(--ink); }
+  .chip.on { background: linear-gradient(180deg, #EBC06A, #A87B27); color: #fff; }
+  .libgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px 16px; }
+  .vcard { all: unset; box-sizing: border-box; cursor: pointer; display: block; border-radius: 16px; }
+  .vthumb { position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center;
+    background: var(--tile-bg, linear-gradient(155deg, #223354, #0d1a2e)); font-size: 2.2rem;
+    box-shadow: 0 8px 20px rgba(var(--shadow),.25), inset 0 0 0 1px rgba(255,255,255,.3); transition: transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease; }
+  .vthumb > img:not(.vfi) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .vthumb .vfi { width: 46px; height: 46px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+  .vplay { position: absolute; width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.85); box-shadow: 0 4px 14px rgba(0,0,0,.25);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); transition: transform .2s ease, background .2s ease; }
+  .vplay svg { width: 16px; height: 16px; fill: var(--ink); margin-left: 2px; }
+  .vdur { position: absolute; right: 8px; bottom: 8px; padding: 2px 7px; border-radius: 6px; font-size: .68rem; font-weight: 600; color: #fff;
+    background: rgba(20,14,8,.65); font-variant-numeric: tabular-nums; }
+  .vcard:hover .vthumb { transform: translateY(-3px); box-shadow: 0 16px 32px rgba(var(--shadow),.32), inset 0 0 0 1px rgba(255,255,255,.4); }
+  .vcard:hover .vplay { transform: scale(1.12); background: #A87B27; }
+  .vcard:hover .vplay svg { fill: #fff; }
+  .vct { margin: 9px 2px 0; font-size: .86rem; font-weight: 600; line-height: 1.25; }
+  .vcs { margin: 2px 2px 0; font-size: .72rem; color: var(--ink-soft); }
+  @media (max-width: 640px) { .topbtns { top: 14px; right: 14px; } .lib { border-radius: 0; } }
+
+  /* ── Onglet « Accès » : identifiants par magasin ─────────────── */
+  .credgate { margin-top: 18px; display: flex; flex-direction: column; gap: 12px; max-width: 360px; }
+  .credgate .cin { width: 100%; padding: 12px 18px; border-radius: 999px; border: 1px solid var(--glass-edge); background: rgba(255,255,255,.7);
+    font: 400 .95rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; color: var(--ink); outline: none; }
+  .credgate .cin:focus { box-shadow: 0 0 0 3px rgba(168,123,39,.25); }
+  .cbtn { all: unset; box-sizing: border-box; cursor: pointer; padding: 10px 20px; border-radius: 999px; text-align: center; color: #fff;
+    font: 600 .85rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; background: linear-gradient(180deg, #EBC06A, #A87B27); }
+  .cbtn:disabled { opacity: .6; cursor: default; }
+  .cbtn:focus-visible, .cmini:focus-visible, .clink:focus-visible { outline: 2px solid rgba(47,37,25,.55); outline-offset: 2px; }
+  .cerr { min-height: 1.2em; font-size: .8rem; color: #B3402F; }
+  .cnote { font-size: .72rem; color: var(--ink-soft); line-height: 1.45; }
+  .clink { all: unset; cursor: pointer; font-size: .76rem; color: var(--ink-soft); text-decoration: underline; }
+  .credtop { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .credtop b { font-size: .86rem; }
+  .clist { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+  .ccard { padding: 14px 16px; border-radius: 18px; background: rgba(255,255,255,.62); border: 1px solid var(--glass-edge); }
+  .chead { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .cicon { flex: none; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+    font-size: 1.1rem; background: var(--tile-bg, linear-gradient(155deg, #223354, #0d1a2e)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.3); }
+  .cicon img { width: 100%; height: 100%; object-fit: cover; }
+  .chead .cname { flex: 1; min-width: 0; font-weight: 600; font-size: .95rem; }
+  .copen { font-size: .72rem; color: #A87B27; text-decoration: none; font-weight: 600; }
+  .crow { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid rgba(47,37,25,.08); }
+  .crow .k { flex: none; width: 92px; font-size: .72rem; color: var(--ink-soft); }
+  .crow .v { flex: 1; min-width: 0; font: 500 .88rem ui-monospace, 'SF Mono', Consolas, monospace; word-break: break-all; }
+  .cmini { all: unset; box-sizing: border-box; cursor: pointer; flex: none; padding: 4px 10px; border-radius: 999px; font-size: .7rem; font-weight: 600;
+    background: rgba(255,255,255,.7); border: 1px solid var(--glass-edge); color: var(--ink); }
+  .cmini:hover { background: #A87B27; color: #fff; }
+  .cnotetxt { margin-top: 6px; font-size: .74rem; color: var(--ink-soft); }
+
+  /* ── Pied ────────────────────────────────────────────────────── */
+  footer { position: fixed; left: 18px; bottom: 24px; z-index: 9; display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px; border-radius: 999px; white-space: nowrap; font-size: .7rem; color: var(--ink-soft); }
+  footer button, footer a { display: inline-flex; color: inherit; opacity: .7; background: none; border: 0; padding: 0; cursor: pointer; transition: opacity .15s ease; }
+  footer button:hover, footer a:hover, footer button:focus-visible, footer a:focus-visible { opacity: 1; }
+  footer svg { width: 14px; height: 14px; }
+  @media (max-width: 760px) { footer .label { display: none; } }
+
+  /* ── Menu contextuel ─────────────────────────────────────────── */
+  .ctx { position: fixed; z-index: 80; min-width: 220px; padding: 6px; border-radius: 14px; display: flex; flex-direction: column;
+    background: rgba(255,255,255,.72); animation: pop .14s ease; transform-origin: top left; }
+  .ctx button { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 7px 12px; border-radius: 8px; cursor: default;
+    font: 400 .82rem -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; color: var(--ink); }
+  .ctx button:hover:not(:disabled), .ctx button:focus-visible { background: #A87B27; color: #fff; }
+  .ctx button:disabled { color: rgba(47,37,25,.4); }
+  .ctx .sep { height: 1px; margin: 5px 8px; background: rgba(47,37,25,.12); }
+  @keyframes pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+
+  .toast { position: fixed; left: 50%; bottom: 100px; transform: translate(-50%, 12px); z-index: 90; opacity: 0; pointer-events: none;
+    padding: 9px 18px; border-radius: 999px; font-size: .8rem; color: #fff; background: rgba(47,37,25,.86); transition: opacity .25s, transform .25s; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 420px) {
+    .grid { grid-template-columns: repeat(3, 1fr); gap: 34px 8px; }
+    .tool-icon { width: 80px; height: 80px; border-radius: 23px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wallpaper" id="wall" aria-hidden="true"></div>
+<div class="flash" id="flash" aria-hidden="true"></div>
+
+<div class="topbtns">
+  <button class="libbtn glass" id="credBtn" type="button" aria-expanded="false" aria-controls="cred">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8 20 3m-3 3 3 3m-6-0 2 2"/></svg>
+    Accès
+  </button>
+  <button class="libbtn glass" id="libBtn" type="button" aria-expanded="false" aria-controls="lib" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M10 8.5v7l6-3.5z"/></svg>
+    Tutos <span class="libcount" id="libCount">0</span>
+  </button>
+</div>
+
+<aside class="widget glass" id="widget" aria-label="Heure">
+  <div class="wd-top">
+    <svg class="wd-clock" viewBox="0 0 64 64" aria-hidden="true">
+      <circle class="face" cx="32" cy="32" r="30"/>
+      <g id="ticks"></g>
+      <g class="hand" id="hH"><line class="h" x1="32" y1="32" x2="32" y2="17" stroke-width="3"/></g>
+      <g class="hand" id="hM"><line class="m" x1="32" y1="32" x2="32" y2="9" stroke-width="2"/></g>
+      <g class="hand" id="hS"><line class="s" x1="32" y1="36" x2="32" y2="7"/></g>
+      <circle cx="32" cy="32" r="2.6" fill="#A87B27"/>
+    </svg>
+    <div>
+      <div class="wd-day" id="wdDay"></div>
+      <div class="wd-date" id="wdDate"></div>
+      <div class="wd-time" id="wdTime"></div>
+    </div>
+  </div>
+  <div class="wd-next" id="wdNext" hidden><span>Prochaine sortie</span><b id="wdCd">--:--:--</b></div>
+</aside>
+
+<header>
+  <div class="wordmark">Aélythèque</div>
+  <div class="rule"></div>
+  <p>Tous les outils internes Aélys, au même endroit.</p>
+</header>
+
+<div class="search-wrap">
+  <div class="sbox">
+    <input id="search" type="search" placeholder="Rechercher" autocomplete="off" aria-label="Rechercher un outil" />
+    <kbd>/</kbd>
+  </div>
+</div>
+
+<div class="news" id="news" aria-live="polite"></div>
+
+<main>
+  <div id="grid" class="grid"></div>
+  <p id="emptyMsg" class="empty" style="display:none;"></p>
+</main>
+
+<footer class="glass">
+  <span class="label">Aélys Bijouterie</span>
+  <a href="admin.html" aria-label="Administration" title="Administration">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+  </a>
+</footer>
+
+<div class="ctx glass" id="ctx" role="menu" hidden></div>
+<div class="toast" id="toast" role="status"></div>
+<div class="libback" id="libBack"></div>
+<aside class="lib glass" id="lib" aria-label="Bibliothèque de tutos" aria-hidden="true" inert>
+  <div class="libhead">
+    <div><h2>Tutos vidéo</h2><p>Présentations et tutos de tous les outils Aélys.</p></div>
+    <button class="libclose" id="libClose" type="button" aria-label="Fermer">×</button>
+  </div>
+  <input class="libsearch" id="libSearch" type="search" placeholder="Rechercher un tuto" autocomplete="off" aria-label="Rechercher un tuto" />
+  <div class="chips" id="libChips"></div>
+  <div class="libgrid" id="libGrid"></div>
+</aside>
+
+<div class="libback" id="credBack"></div>
+<aside class="lib glass" id="cred" aria-label="Identifiants par magasin" aria-hidden="true" inert>
+  <div class="libhead">
+    <div><h2>Identifiants</h2><p id="credSub">Les accès aux applis de ton magasin.</p></div>
+    <button class="libclose" id="credClose" type="button" aria-label="Fermer">×</button>
+  </div>
+  <form class="credgate" id="credGate" autocomplete="off">
+    <input class="cin" id="credCode" type="password" placeholder="Code du magasin" aria-label="Code du magasin" autocomplete="off" />
+    <button class="cbtn" id="credGo" type="submit">Afficher mes identifiants</button>
+    <div class="cerr" id="credErr" role="alert"></div>
+    <div class="cnote">Le code de ton magasin t’a été donné par la direction. Seuls les identifiants de ton magasin s’affichent.</div>
+  </form>
+  <div id="credView" hidden>
+    <div class="credtop"><b id="credStore"></b><button class="clink" id="credLock" type="button">Verrouiller</button></div>
+    <input class="libsearch" id="credSearch" type="search" placeholder="Rechercher une appli" autocomplete="off" aria-label="Rechercher une appli" />
+    <div class="clist" id="credList"></div>
+  </div>
+</aside>
+
+<div class="vmodal" id="vmodal" role="dialog" aria-modal="true" aria-label="Vidéo" hidden>
+  <div class="vpanel glass">
+    <button class="vclose" id="vclose" type="button" aria-label="Fermer la vidéo">×</button>
+    <div class="vstage" id="vstage"></div>
+    <div class="vmeta"><b id="vtitle"></b><span id="vtool"></span></div>
+    <div class="vlist" id="vlist"></div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+  // ═══════════════════════════════════════════════════════════════
+  //  La liste des outils est gérée depuis admin.html.
+  //  Cette liste n'est qu'un FILET DE SÉCURITÉ : affichée seulement
+  //  si la base est injoignable et qu'aucune copie n'est en mémoire.
+  // ═══════════════════════════════════════════════════════════════
+  const FALLBACK = [
+    { id: 'f1', name: "Aurel'IA", desc: "Bibliothèque de procédures", url: "https://chatbot-alpha-sepia-22.vercel.app/", icon: "📚", image: "aureil-ia-icon.jpg", color: "#A87B27" },
+    { id: 'f2', name: "SIMONE", desc: "Recherche de références SIMONE A BORDEAUX", url: "https://recherche-reference-simone.netlify.app/", icon: "🔍", image: "simone-icon.jpg", color: "#A87B27" },
+    { id: 'f3', name: "TEMPO", desc: "Gestion des visuels opérations magasin", url: "https://pac-aelys.vercel.app/connexion-boutique", icon: "🖼️", image: "tempo.jpg", color: "#A87B27" }
+  ];
+
+  const CFG = window.AELYS_CONFIG || {};
+  const CACHE_KEY = 'aelytheque.tools.v1';
+  const NEW_DAYS = 7;
+  const $ = id => document.getElementById(id);
+  const grid = $('grid'), searchEl = $('search');
+
+  let tools = [];
+  let general = [];          // tutos non liés à un outil
+  let offset = 0;            // horloge serveur - horloge de l'appareil
+  let reloading = false;
+  let introDone = false;
+  let lastHtml = '';
+  let lockedPrev = new Set();
+  let releaseTimer = null;
+
+  // ── Utilitaires ─────────────────────────────────────────────────
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function safeUrl(u) {
+    if (!u) return '#';
+    return /^(https?:\/\/|\/|\.\/|[\w-]+\.[\w]+$)/i.test(u) ? u : '#';
+  }
+  function shade(hex, amount) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+    if (!m) return null;
+    const num = parseInt(m[1], 16);
+    const ch = v => Math.max(0, Math.min(255, Math.round(v * amount)));
+    return `#${[(num >> 16) & 255, (num >> 8) & 255, num & 255].map(v => ch(v).toString(16).padStart(2,'0')).join('')}`;
+  }
+  function tileBackground(color) {
+    if (!/^#[0-9a-f]{6}$/i.test(color || '')) return null;
+    return `linear-gradient(155deg, ${color}, ${shade(color, 0.62)})`;
+  }
+  const nowMs = () => Date.now() + offset;
+  const pad = n => String(n).padStart(2, '0');
+
+  function countdown(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+    return d > 0 ? `${d}j ${pad(h)}h${pad(m)}` : `${pad(h)}:${pad(m)}:${pad(x)}`;
+  }
+  function releaseLabel(ms) {
+    const d = new Date(ms), t = new Date(nowMs());
+    const hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return d.toDateString() === t.toDateString() ? `dès ${hm}` : `${pad(d.getDate())}/${pad(d.getMonth() + 1)} · ${hm}`;
+  }
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+  const findTool = id => tools.find(t => t.id === id);
+  const isNew = t => !t.locked && t.releaseAt && nowMs() >= t.releaseAt && nowMs() - t.releaseAt < NEW_DAYS * 864e5;
+
+  // ── Chargement ──────────────────────────────────────────────────
+
+  function normalize(t) {
+    return {
+      id: t.id, name: t.name, desc: t.descr != null ? t.descr : t.desc,
+      url: t.url, icon: t.icon, image: t.image, color: t.color, teaser: t.teaser,
+      locked: !!t.locked, releaseAt: t.release_at ? new Date(t.release_at).getTime() : null,
+      videos: Array.isArray(t.videos) ? t.videos : []
+    };
+  }
+
+  async function load() {
+    try {
+      if (!CFG.supabaseUrl || !CFG.supabaseAnonKey) throw new Error('config');
+      const r = await fetch(`${CFG.supabaseUrl}/rest/v1/rpc/get_tools`, {
+        method: 'POST',
+        headers: { apikey: CFG.supabaseAnonKey, Authorization: `Bearer ${CFG.supabaseAnonKey}`, 'Content-Type': 'application/json' },
+        body: '{}'
+      });
+      if (!r.ok) throw new Error('http ' + r.status);
+      const data = await r.json();
+      offset = new Date(data.now).getTime() - Date.now();
+      tools = data.tools.map(normalize);
+      general = Array.isArray(data.general) ? data.general : [];
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+    } catch (e) {
+      let cached = null;
+      try { cached = JSON.parse(localStorage.getItem(CACHE_KEY)); } catch (e2) {}
+      if (cached && cached.tools) {
+        offset = new Date(cached.now).getTime() - Date.now();
+        tools = cached.tools.map(normalize);
+        general = Array.isArray(cached.general) ? cached.general : [];
+      } else {
+        tools = FALLBACK;
+      }
+    }
+  }
+
+  // ── Rendu de la grille ──────────────────────────────────────────
+
+  const LOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+
+  function iconInner(t) {
+    return t.image ? `<img src="${escapeHtml(t.image)}" alt="" draggable="false" />` : escapeHtml(t.icon || '🔗');
+  }
+  function styleAttr(t) {
+    const bg = tileBackground(t.color);
+    return bg ? ` style="--tile-bg:${escapeHtml(bg)}"` : '';
+  }
+
+  function tileHtml(t, reveal) {
+    const id = escapeHtml(t.id);
+    if (t.locked && t.releaseAt) {
+      const teaser = t.teaser ? `<img class="teaser" src="${escapeHtml(t.teaser)}" alt="" />` : '';
+      return `
+        <div class="tool locked" data-id="${id}" aria-disabled="true"${styleAttr(t)}>
+          <div class="ti"><div class="tool-icon">
+            ${teaser}
+            <div class="lock" data-release="${t.releaseAt}">${LOCK_SVG}
+              <span class="cd">--:--:--</span>
+              <span class="at">${escapeHtml(releaseLabel(t.releaseAt))}</span>
+            </div>
+          </div></div>
+          <div class="tool-name blur">${escapeHtml(t.name)}</div>
+          <div class="tool-desc blur">${escapeHtml(t.desc)}</div>
+        </div>`;
+    }
+    const badge = isNew(t) ? '<span class="badge-new">Nouveau</span>' : '';
+    const desc = t.desc ? `<div class="tool-desc">${escapeHtml(t.desc)}</div>` : '';
+    const n = (t.videos || []).length;
+    const vlink = n ? `<button type="button" class="vid-link" data-vid="${id}" aria-label="${n > 1 ? n + ' vidéos' : 'Voir la vidéo'} : ${escapeHtml(t.name)}"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 .6v8.8L9.2 5z"/></svg>${n > 1 ? n + ' vidéos' : 'Voir la vidéo'}</button>` : '';
+    return `
+      <div class="tool${reveal ? ' reveal' : ''}" data-id="${id}"${styleAttr(t)}>
+        <a class="tool-link" href="${escapeHtml(safeUrl(t.url))}" draggable="false">
+          <div class="ti"><div class="tool-icon">${iconInner(t)}</div>${badge}</div>
+          <div class="tool-name">${escapeHtml(t.name)}</div>
+          ${desc}
+        </a>${vlink}
+      </div>`;
+  }
+
+  function renderGrid() {
+    const emptyMsg = $('emptyMsg');
+    const q = searchEl.value.trim().toLowerCase();
+    const ordered = tools;
+    const list = !q ? ordered : ordered.filter(t => !t.locked &&
+      ((t.name || '').toLowerCase().includes(q) || (t.desc || '').toLowerCase().includes(q)));
+
+    renderNews(); scheduleRelease(); renderLibBtn();
+
+    if (tools.length === 0 || list.length === 0) {
+      grid.innerHTML = ''; lastHtml = '';
+      emptyMsg.textContent = tools.length === 0 ? 'Aucun outil pour l’instant.' : 'Aucun outil ne correspond à cette recherche.';
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+
+    const revealIds = tools.filter(t => !t.locked && lockedPrev.has(t.id)).map(t => t.id);
+    lockedPrev = new Set(tools.filter(t => t.locked).map(t => t.id));
+    const html = list.map(t => tileHtml(t, revealIds.includes(t.id))).join('');
+
+    if (html !== lastHtml) {                 // ne recrée rien si rien n'a changé → pas d'animation rejouée
+      lastHtml = html;
+      grid.innerHTML = html;
+      if (!introDone) { introDone = true; startIntro(); }
+      if (revealIds.length) playReveal(revealIds);
+    }
+    tick();
+  }
+
+  // Apparition en vague : diagonale depuis le coin haut-gauche
+  function startIntro() {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const cols = Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(' ').length);
+    [...grid.children].forEach((el, i) => {
+      el.style.setProperty('--d', (140 + (Math.floor(i / cols) + (i % cols)) * 85) + 'ms');
+    });
+    grid.classList.add('intro');
+    setTimeout(() => grid.classList.remove('intro'), 2800);
+  }
+
+  // ── Nouveautés / prochaine sortie ───────────────────────────────
+
+  function nextRelease() {
+    return tools.filter(t => t.locked && t.releaseAt).map(t => t.releaseAt).sort((a, b) => a - b)[0] || null;
+  }
+  function renderNews() {
+    const parts = tools.filter(isNew).slice(0, 2).map(t =>
+      `<a class="pill new glass" href="${escapeHtml(safeUrl(t.url))}">Nouveau · ${escapeHtml(t.name)}</a>`);
+    const nxt = nextRelease();
+    if (nxt) parts.push(`<span class="pill soon glass">Bientôt · ${escapeHtml(releaseLabel(nxt))}</span>`);
+    const html = parts.join('');
+    if ($('news').dataset.h !== html) { $('news').innerHTML = html; $('news').dataset.h = html; }
+  }
+
+  // ── Révélation en direct ────────────────────────────────────────
+
+  function playReveal(ids) {
+    ids.forEach((id, k) => setTimeout(() => {
+      const el = grid.querySelector(`.tool[data-id="${CSS.escape(id)}"]`); if (!el) return;
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      setTimeout(() => {
+        const r = el.querySelector('.tool-icon').getBoundingClientRect();
+        burst(r.left + r.width / 2, r.top + r.height / 2);
+      }, 260);
+      const t = findTool(id); if (t) toast(`✦ Nouveau : ${t.name}`);
+    }, 80 + k * 700));
+  }
+  function burst(x, y) {
+    const fl = $('flash');
+    fl.style.setProperty('--fx', (x / innerWidth * 100) + '%'); fl.style.setProperty('--fy', (y / innerHeight * 100) + '%');
+    fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
+    const b = document.createElement('div');
+    b.className = 'burst'; b.style.left = x + 'px'; b.style.top = y + 'px';
+    let h = '<i class="ring"></i><i class="ring r2"></i>';
+    for (let i = 0; i < 18; i++) h += `<i class="spark" style="--a:${i * 20 + Math.random() * 14}deg;--r:${70 + Math.random() * 90}px;animation-delay:${Math.random() * .15}s"></i>`;
+    b.innerHTML = h; document.body.appendChild(b); setTimeout(() => b.remove(), 1900);
+  }
+
+  // ── Horloge, compte à rebours, widget ───────────────────────────
+
+  function buildTicks() {
+    let h = '';
+    for (let i = 0; i < 12; i++) {
+      const big = i % 3 === 0, a = i * 30 * Math.PI / 180, r1 = big ? 24 : 26, r2 = 28.5;
+      h += `<line class="tick${big ? ' big' : ''}" x1="${(32 + Math.sin(a) * r1).toFixed(2)}" y1="${(32 - Math.cos(a) * r1).toFixed(2)}" x2="${(32 + Math.sin(a) * r2).toFixed(2)}" y2="${(32 - Math.cos(a) * r2).toFixed(2)}"/>`;
+    }
+    $('ticks').innerHTML = h;
+  }
+  function updateWidget(n) {
+    const d = new Date(n), local = n - d.getTimezoneOffset() * 6e4;
+    $('hH').style.transform = `rotate(${local / 36e5 * 30}deg)`;
+    $('hM').style.transform = `rotate(${local / 6e4 * 6}deg)`;
+    $('hS').style.transform = `rotate(${Math.floor(local / 1000) * 6}deg)`;
+    $('wdDay').textContent = d.toLocaleDateString('fr-FR', { weekday: 'long' });
+    $('wdDate').textContent = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+    $('wdTime').textContent = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const nxt = nextRelease();
+    $('wdNext').hidden = !nxt;
+    if (nxt) $('wdCd').textContent = countdown(nxt - n);
+  }
+
+  function tick() {
+    const n = nowMs();
+    let expired = false;
+    document.querySelectorAll('.lock[data-release]').forEach(el => {
+      const left = Number(el.dataset.release) - n;
+      el.querySelector('.cd').textContent = countdown(left);
+      el.classList.toggle('final', left > 0 && left <= 10000);   // dernières 10 s : ça pulse
+      if (left <= 0) expired = true;
+    });
+    updateWidget(n);
+    // L'heure est passée : on redemande la liste au serveur (c'est lui qui décide).
+    if (expired && !reloading) {
+      reloading = true;
+      refresh().finally(() => setTimeout(() => { reloading = false; }, 700));
+    }
+  }
+  function scheduleRelease() {      // réveil à la milliseconde près, sans attendre le tick suivant
+    clearTimeout(releaseTimer);
+    const nxt = nextRelease();
+    if (nxt) releaseTimer = setTimeout(tick, Math.max(0, nxt - nowMs()) + 40);
+  }
+
+  async function refresh() { await load(); renderGrid(); }
+
+  // ── Clic droit ──────────────────────────────────────────────────
+
+  const ctx = $('ctx');
+  function closeCtx() { ctx.hidden = true; ctx.innerHTML = ''; }
+  function openCtx(x, y, items) {
+    ctx.innerHTML = '';
+    items.forEach(it => {
+      if (it === '-') { const s = document.createElement('div'); s.className = 'sep'; ctx.appendChild(s); return; }
+      const b = document.createElement('button');
+      b.type = 'button'; b.setAttribute('role', 'menuitem'); b.textContent = it.label; b.disabled = !!it.disabled;
+      b.addEventListener('click', () => { closeCtx(); if (it.fn) it.fn(); });
+      ctx.appendChild(b);
+    });
+    ctx.hidden = false;
+    const r = ctx.getBoundingClientRect();
+    ctx.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + 'px';
+    ctx.style.top = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + 'px';
+  }
+
+  document.addEventListener('contextmenu', e => {
+    if (/^(input|textarea)$/i.test(e.target.tagName || '')) return;
+    e.preventDefault();
+    const el = e.target.closest('.tool');
+    const t = el && findTool(el.dataset.id);
+    if (t && t.locked) {
+      openCtx(e.clientX, e.clientY, [{ label: t.releaseAt ? `Disponible ${releaseLabel(t.releaseAt)}` : 'Bientôt disponible', disabled: true }]);
+    } else if (t) {
+      const abs = new URL(safeUrl(t.url), location.href).href;
+      openCtx(e.clientX, e.clientY, [
+        { label: 'Ouvrir', fn: () => { location.href = abs; } },
+        { label: 'Ouvrir dans un nouvel onglet', fn: () => window.open(abs, '_blank', 'noopener') },
+        ...(t.videos && t.videos.length ? [{ label: 'Voir la vidéo', fn: () => openVideos(t.id) }] : []),
+        { label: 'Copier le lien', fn: () => { (navigator.clipboard ? navigator.clipboard.writeText(abs) : Promise.reject()).then(() => toast('Lien copié'), () => toast('Copie impossible')); } }
+      ]);
+    } else {
+      openCtx(e.clientX, e.clientY, [{ label: 'Actualiser la liste', fn: () => { lastHtml = ''; refresh(); toast('Liste actualisée'); } }]);
+    }
+  });
+  document.addEventListener('pointerdown', e => { if (!ctx.hidden && !ctx.contains(e.target)) closeCtx(); });
+  addEventListener('scroll', closeCtx, { passive: true });
+  addEventListener('resize', closeCtx);
+  addEventListener('blur', closeCtx);
+
+  // ── Clavier ─────────────────────────────────────────────────────
+
+  searchEl.addEventListener('input', renderGrid);
+  document.addEventListener('keydown', e => {
+    const typing = /^(input|textarea)$/i.test((e.target.tagName || ''));
+    if (e.key === 'Escape') { if (!vmodal.hidden) { closeVideos(); return; } if (lib.classList.contains('open')) { closeLib(); return; } if ($('cred').classList.contains('open')) { closeCred(); return; } if (!ctx.hidden) closeCtx(); return; }
+    if ((e.key === '/' && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
+      e.preventDefault(); searchEl.focus(); searchEl.select();
+    }
+  });
+  searchEl.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { searchEl.value = ''; searchEl.blur(); renderGrid(); }
+    if (e.key === 'Enter') { const first = grid.querySelector('a.tool-link'); if (first) location.href = first.href; }
+  });
+
+  // ── Reflet de verre qui suit le pointeur + parallaxe du fond ────
+
+  grid.addEventListener('pointermove', e => {
+    const ic = e.target.closest && e.target.closest('.tool-icon'); if (!ic) return;
+    const r = ic.getBoundingClientRect();
+    ic.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100).toFixed(0) + '%');
+    ic.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100).toFixed(0) + '%');
+  });
+  if (matchMedia('(pointer: fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const wall = $('wall');
+    addEventListener('pointermove', e => {
+      wall.style.setProperty('--px', (-(e.clientX / innerWidth - .5) * 26).toFixed(1) + 'px');
+      wall.style.setProperty('--py', (-(e.clientY / innerHeight - .5) * 18).toFixed(1) + 'px');
+    });
+  }
+
+  // ── Vidéos : lecteur + bibliothèque de tutos ────────────────────
+
+  const vmodal = $('vmodal'), vstage = $('vstage');
+  const lib = $('lib'), libBack = $('libBack');
+  let vState = null, vOpener = null;
+  const warmed = new Map();
+
+  // Fichier MP4/WebM → lecteur natif ; YouTube / Vimeo / Loom → lecteur intégré
+  function videoSource(url) {
+    let m;
+    if ((m = /(?:youtube\.com\/watch\?[^#]*v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([\w-]{11})/.exec(url)))
+      return { type: 'iframe', src: `https://www.youtube-nocookie.com/embed/${m[1]}?autoplay=1&rel=0&modestbranding=1&playsinline=1` };
+    if ((m = /vimeo\.com\/(?:video\/)?(\d+)/.exec(url))) return { type: 'iframe', src: `https://player.vimeo.com/video/${m[1]}?autoplay=1` };
+    if ((m = /loom\.com\/(?:share|embed)\/([a-f0-9]+)/i.exec(url))) return { type: 'iframe', src: `https://www.loom.com/embed/${m[1]}?autoplay=1` };
+    return /^https?:\/\//i.test(url) ? { type: 'video', src: url } : null;
+  }
+
+  // Préchauffage : dès que la souris approche, on ouvre la connexion et on charge l'image de couverture
+  function warm(v) {
+    if (!v) return;
+    if (v.poster) new Image().src = v.poster;
+    const s = videoSource(v.url);
+    if (s && s.type === 'video' && !warmed.has(v.url)) {
+      const el = document.createElement('video'); el.preload = 'metadata'; el.muted = true; el.src = s.src; warmed.set(v.url, el);
+    }
+  }
+
+  function stopStage() {
+    const v = vstage.querySelector('video');
+    if (v) { v.pause(); v.removeAttribute('src'); v.load(); }
+    vstage.innerHTML = '';
+  }
+
+  function playVideo(i) {
+    const { label, items } = vState, v = items[i];
+    vState.i = i; stopStage();
+    $('vtitle').textContent = v.title || label;
+    $('vtool').textContent = (v.toolName || label) + (items.length > 1 ? ` · ${i + 1}/${items.length}` : '');
+    [...$('vlist').children].forEach((b, k) => b.classList.toggle('on', k === i));
+    const s = videoSource(v.url);
+    if (!s) { vstage.innerHTML = '<p class="verr">Lien vidéo invalide.</p>'; return; }
+    if (s.type === 'iframe') {
+      const f = document.createElement('iframe');
+      f.src = s.src; f.title = v.title || label; f.allowFullscreen = true;
+      f.allow = 'autoplay; fullscreen; picture-in-picture'; f.referrerPolicy = 'strict-origin-when-cross-origin';
+      vstage.appendChild(f); return;
+    }
+    const el = document.createElement('video');
+    el.controls = true; el.autoplay = true; el.playsInline = true; el.preload = 'auto';
+    if (v.poster) el.poster = v.poster;
+    el.src = s.src;
+    el.addEventListener('ended', () => { if (vState && vState.i < items.length - 1) playVideo(vState.i + 1); });
+    el.addEventListener('error', () => {
+      vstage.innerHTML = '';
+      const p = document.createElement('p'); p.className = 'verr'; p.textContent = 'Impossible de lire cette vidéo ici. ';
+      const a = document.createElement('a'); a.href = s.src; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Ouvrir dans un nouvel onglet';
+      p.appendChild(a); vstage.appendChild(p);
+    });
+    vstage.appendChild(el);
+    el.play().catch(() => {});                  // si le navigateur refuse l'autoplay, le bouton lecture reste là
+  }
+
+  // Lit une liste de vidéos à partir de la n-ième ; la suivante démarre à la fin
+  function openList(label, items, start, opener) {
+    if (!items.length) return;
+    vState = { label, items, i: 0 }; vOpener = opener || null;
+    const list = $('vlist'); list.innerHTML = '';
+    if (items.length > 1 && items.length <= 8) items.forEach((v, k) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = `${k + 1} · ${v.title || 'Vidéo ' + (k + 1)}`;
+      b.addEventListener('click', () => playVideo(k)); list.appendChild(b);
+    });
+    vmodal.hidden = false; document.body.style.overflow = 'hidden';
+    playVideo(start || 0);
+    $('vclose').focus({ preventScroll: true });
+  }
+  function openVideos(id, start, opener) {
+    const t = findTool(id); if (!t || !t.videos || !t.videos.length) return;
+    openList(t.name, t.videos.map(v => ({ ...v, toolName: t.name })), start, opener);
+  }
+  function closeVideos() {
+    stopStage(); vmodal.hidden = true; document.body.style.overflow = ''; vState = null;
+    if (vOpener && document.contains(vOpener)) vOpener.focus({ preventScroll: true });
+    vOpener = null;
+  }
+  $('vclose').addEventListener('click', closeVideos);
+  vmodal.addEventListener('pointerdown', e => { if (e.target === vmodal) closeVideos(); });
+
+  // Lien vidéo sous une app
+  grid.addEventListener('click', e => {
+    const b = e.target.closest('.vid-link'); if (!b) return;
+    e.preventDefault(); openVideos(b.dataset.vid, 0, b);
+  });
+  grid.addEventListener('pointerover', e => {
+    const b = e.target.closest && e.target.closest('.vid-link');
+    if (b) { const t = findTool(b.dataset.vid); warm(t && t.videos && t.videos[0]); }
+  });
+
+  // ── Onglet « Tutos » : bibliothèque de toutes les vidéos ────────
+
+  let libFilter = 'all', libList = [];
+
+  function libraryItems() {
+    const out = general.map(v => ({ ...v, toolId: null, toolName: 'Général', icon: '🎓', color: '#A87B27' }));
+    tools.filter(t => !t.locked).forEach(t => (t.videos || []).forEach(v =>
+      out.push({ ...v, toolId: t.id, toolName: t.name, icon: t.icon, image: t.image, color: t.color })));
+    return out;
+  }
+  function renderLibBtn() {
+    const n = libraryItems().length;
+    $('libBtn').hidden = n === 0;
+    $('libCount').textContent = n;
+    if (lib.classList.contains('open')) renderLib();
+  }
+  function renderLib() {
+    const all = libraryItems(), q = $('libSearch').value.trim().toLowerCase();
+    const owners = [];
+    all.forEach(v => { const k = v.toolId || 'general'; if (!owners.some(o => o.k === k)) owners.push({ k, name: v.toolName }); });
+    if (libFilter !== 'all' && !owners.some(o => o.k === libFilter)) libFilter = 'all';
+    $('libChips').innerHTML = [{ k: 'all', name: 'Tout' }, ...owners].map(o =>
+      `<button type="button" class="chip${o.k === libFilter ? ' on' : ''}" data-k="${escapeHtml(o.k)}">${escapeHtml(o.name)}</button>`).join('');
+    libList = all.filter(v => (libFilter === 'all' || (v.toolId || 'general') === libFilter) &&
+      (!q || (v.title || '').toLowerCase().includes(q) || v.toolName.toLowerCase().includes(q)));
+    $('libGrid').innerHTML = libList.length ? libList.map((v, i) => {
+      const bg = tileBackground(v.color);
+      const media = v.poster ? `<img src="${escapeHtml(v.poster)}" alt="" loading="lazy" draggable="false" />`
+        : (v.image ? `<img class="vfi" src="${escapeHtml(v.image)}" alt="" draggable="false" />` : escapeHtml(v.icon || '🔗'));
+      const dur = v.duration != null ? `<span class="vdur">${Math.floor(v.duration / 60)}:${pad(v.duration % 60)}</span>` : '';
+      return `<button type="button" class="vcard" data-i="${i}">
+        <div class="vthumb"${bg ? ` style="--tile-bg:${escapeHtml(bg)}"` : ''}>${media}
+          <span class="vplay"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 .6v8.8L9.2 5z"/></svg></span>${dur}</div>
+        <div class="vct">${escapeHtml(v.title || 'Vidéo')}</div><div class="vcs">${escapeHtml(v.toolName)}</div>
+      </button>`;
+    }).join('') : '<p class="empty">Aucun tuto trouvé.</p>';
+  }
+  function openLib() {
+    renderLib();
+    lib.inert = false; lib.setAttribute('aria-hidden', 'false');
+    lib.classList.add('open'); libBack.classList.add('open'); $('libBtn').setAttribute('aria-expanded', 'true');
+    $('libClose').focus({ preventScroll: true });
+  }
+  function closeLib() {
+    lib.classList.remove('open'); libBack.classList.remove('open'); $('libBtn').setAttribute('aria-expanded', 'false');
+    lib.inert = true; lib.setAttribute('aria-hidden', 'true');
+    $('libBtn').focus({ preventScroll: true });
+  }
+  $('libBtn').addEventListener('click', () => lib.classList.contains('open') ? closeLib() : openLib());
+  $('libClose').addEventListener('click', closeLib);
+  libBack.addEventListener('pointerdown', closeLib);
+  $('libSearch').addEventListener('input', renderLib);
+  $('libChips').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    libFilter = b.dataset.k; renderLib();
+  });
+  $('libGrid').addEventListener('click', e => {
+    const c = e.target.closest('.vcard'); if (!c) return;
+    openList('Tutos', libList, Number(c.dataset.i), c);
+  });
+  $('libGrid').addEventListener('pointerover', e => {
+    const c = e.target.closest && e.target.closest('.vcard'); if (c) warm(libList[Number(c.dataset.i)]);
+  });
+
+  // ── Onglet « Accès » : identifiants par magasin ─────────────────
+  // Rien n'est stocké dans la page : le serveur ne renvoie que les identifiants du magasin dont on donne le code.
+
+  const credEl = $('cred'), credBack = $('credBack');
+  let credData = null, credCode = null;
+  const CRED_KEY = 'aelytheque.cred.v1';          // sessionStorage : s'efface à la fermeture de l'onglet
+
+  async function fetchCreds(code) {
+    const r = await fetch(`${CFG.supabaseUrl}/rest/v1/rpc/get_credentials`, {
+      method: 'POST',
+      headers: { apikey: CFG.supabaseAnonKey, Authorization: `Bearer ${CFG.supabaseAnonKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_code: code })
+    });
+    if (r.status === 404) throw new Error('Service pas encore activé (le SQL des identifiants n’a pas été lancé).');
+    if (!r.ok) { let m = ''; try { m = (await r.json()).message || ''; } catch (e) {} throw new Error(m || 'Service indisponible, réessaie.'); }
+    return r.json();
+  }
+  function showCredView() {
+    $('credGate').hidden = true; $('credView').hidden = false;
+    $('credStore').textContent = '🏬 ' + credData.store;
+    $('credSub').textContent = 'Les accès aux applis de ton magasin.';
+    renderCred();
+  }
+  function showCredGate() {
+    credData = null; credCode = null;
+    try { sessionStorage.removeItem(CRED_KEY); } catch (e) {}
+    $('credView').hidden = true; $('credGate').hidden = false;
+    $('credCode').value = ''; $('credErr').textContent = ''; $('credList').innerHTML = ''; $('credSearch').value = '';
+    $('credSub').textContent = 'Entre le code de ton magasin.';
+  }
+  function renderCred() {
+    if (!credData) return;
+    const q = $('credSearch').value.trim().toLowerCase();
+    const items = credData.items.filter(c => !q || (c.app || '').toLowerCase().includes(q));
+    $('credList').innerHTML = items.length ? items.map((c, i) => {
+      const t = c.tool_id ? findTool(c.tool_id) : null;
+      const bg = t ? tileBackground(t.color) : '';
+      const ic = t && t.image ? `<img src="${escapeHtml(t.image)}" alt="" draggable="false" />` : escapeHtml((t && t.icon) || '🔑');
+      const open = t && t.url ? `<a class="copen" href="${escapeHtml(t.url)}" target="_blank" rel="noopener">Ouvrir ↗</a>` : '';
+      const row = (k, v, kind) => v ? `<div class="crow"><span class="k">${k}</span><span class="v" data-kind="${kind}">${kind === 'pw' ? '••••••••' : escapeHtml(v)}</span>
+          ${kind === 'pw' ? '<button class="cmini" type="button" data-a="eye">Afficher</button>' : ''}<button class="cmini" type="button" data-a="copy">Copier</button></div>` : '';
+      return `<div class="ccard" data-i="${credData.items.indexOf(c)}">
+        <div class="chead"><div class="cicon"${bg ? ` style="--tile-bg:${escapeHtml(bg)}"` : ''}>${ic}</div><div class="cname">${escapeHtml(c.app)}</div>${open}</div>
+        ${row('Identifiant', c.login, 'login')}${row('Mot de passe', c.password, 'pw')}
+        ${c.note ? `<div class="cnotetxt">${escapeHtml(c.note)}</div>` : ''}
+      </div>`;
+    }).join('') : `<p class="empty">${q ? 'Aucune appli trouvée.' : 'Aucun identifiant pour ce magasin pour le moment.'}</p>`;
+  }
+  function copyText(txt) {
+    const done = () => toast('Copié');
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, () => fallbackCopy(txt, done));
+    else fallbackCopy(txt, done);
+  }
+  function fallbackCopy(txt, done) {
+    const ta = document.createElement('textarea'); ta.value = txt; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) { toast('Copie impossible : sélectionne le texte à la main.'); }
+    ta.remove();
+  }
+  async function openCred() {
+    credEl.inert = false; credEl.setAttribute('aria-hidden', 'false');
+    credEl.classList.add('open'); credBack.classList.add('open'); $('credBtn').setAttribute('aria-expanded', 'true');
+    if (!credData) {
+      let saved = null; try { saved = sessionStorage.getItem(CRED_KEY); } catch (e) {}
+      if (saved) {                                  // déjà déverrouillé dans cet onglet
+        try { const d = await fetchCreds(saved); if (d) { credData = d; credCode = saved; showCredView(); return; } } catch (e) {}
+        showCredGate();
+      }
+      $('credCode').focus({ preventScroll: true });
+    } else $('credClose').focus({ preventScroll: true });
+  }
+  function closeCred() {
+    credEl.classList.remove('open'); credBack.classList.remove('open'); $('credBtn').setAttribute('aria-expanded', 'false');
+    credEl.inert = true; credEl.setAttribute('aria-hidden', 'true');
+    $('credBtn').focus({ preventScroll: true });
+  }
+  $('credBtn').addEventListener('click', () => credEl.classList.contains('open') ? closeCred() : openCred());
+  $('credClose').addEventListener('click', closeCred);
+  credBack.addEventListener('pointerdown', closeCred);
+  $('credLock').addEventListener('click', () => { showCredGate(); $('credCode').focus({ preventScroll: true }); });
+  $('credSearch').addEventListener('input', renderCred);
+  $('credGate').addEventListener('submit', async e => {
+    e.preventDefault();
+    const code = $('credCode').value.trim(), btn = $('credGo'), err = $('credErr'); err.textContent = '';
+    if (!code) { err.textContent = 'Entre le code de ton magasin.'; return; }
+    btn.disabled = true; btn.textContent = 'Vérification…';
+    try {
+      const d = await fetchCreds(code);
+      if (!d) { err.textContent = 'Code incorrect.'; $('credCode').select(); return; }
+      credData = d; credCode = code;
+      try { sessionStorage.setItem(CRED_KEY, code); } catch (e2) {}
+      $('credCode').value = ''; showCredView();
+    } catch (e2) { err.textContent = e2.message; }
+    finally { btn.disabled = false; btn.textContent = 'Afficher mes identifiants'; }
+  });
+  $('credList').addEventListener('click', e => {
+    const b = e.target.closest('button[data-a]'); if (!b || !credData) return;
+    const card = b.closest('.ccard'), c = credData.items[Number(card.dataset.i)], row = b.closest('.crow'), v = row.querySelector('.v');
+    if (b.dataset.a === 'copy') copyText(v.dataset.kind === 'pw' ? c.password : c.login);
+    else if (b.dataset.a === 'eye') {
+      const shown = v.dataset.shown === '1';
+      v.textContent = shown ? '••••••••' : c.password; v.dataset.shown = shown ? '0' : '1'; b.textContent = shown ? 'Afficher' : 'Masquer';
+    }
+  });
+
+  // ── Démarrage ───────────────────────────────────────────────────
+
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+  buildTicks();
+  setInterval(tick, 1000);
+  try {                                            // copie locale d'abord : jamais d'écran vide
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY));
+    if (c && c.tools) { offset = new Date(c.now).getTime() - Date.now(); tools = c.tools.map(normalize); general = Array.isArray(c.general) ? c.general : []; renderGrid(); }
+  } catch (e) {}
+  updateWidget(nowMs());
+  refresh();
+</script>
+
+</body>
+</html>
