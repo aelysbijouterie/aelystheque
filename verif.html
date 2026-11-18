@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
-<title>Aélythèque · Vérification</title>
+<title>Aélysthèque · Vérification</title>
 <style>
   :root { --bg: #F5F1EE; --card: #fff; --text: #26313F; --muted: #7A7068; --ok: #2F7D4F; --warn: #A87B27; --ko: #B3402F; --line: #EFE8E0; }
   * { box-sizing: border-box; }
@@ -24,7 +24,7 @@
 </head>
 <body>
 <main>
-  <h1>Vérification de l’Aélythèque</h1>
+  <h1>Vérification de l’Aélysthèque</h1>
   <p class="sub">Ouvre cette page après chaque mise en ligne : tout doit être vert. Elle ne modifie rien et n’affiche aucun mot de passe.</p>
   <div id="sum" class="sum">Vérification en cours…</div>
   <div id="res"></div>
@@ -90,7 +90,7 @@
       fr.onload = () => setTimeout(() => {
         try {
           const d = fr.contentDocument;
-          add(/Aélythèque/.test(d.title) ? 'ok' : 'ko', 'Titre de la page', d.title);
+          add(/Aélysthèque/.test(d.title) ? 'ok' : 'ko', 'Titre de la page', d.title);
           add(d.querySelector('h1') ? 'ok' : 'warn', 'Titre principal (h1)');
           const n = d.querySelectorAll('.tool').length;
           add(n > 0 ? 'ok' : 'warn', 'Tuiles affichées', n + ' tuile(s)');

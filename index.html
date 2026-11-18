@@ -4,10 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#cfc6b6" />
-<title>Aélythèque</title>
-<meta name="description" content="Aélythèque : tous les outils internes Aélys Bijouterie, au même endroit." />
+<title>Aélysthèque</title>
+<meta name="description" content="Aélysthèque : tous les outils internes Aélys Bijouterie, au même endroit." />
 <meta property="og:type" content="website" />
-<meta property="og:title" content="Aélythèque" />
+<meta property="og:title" content="Aélysthèque" />
 <meta property="og:description" content="Tous les outils internes Aélys Bijouterie, au même endroit." />
 <meta property="og:image" content="https://aelystheque.vercel.app/wallpaper.jpg" />
 <meta name="twitter:card" content="summary" />
@@ -350,6 +350,8 @@
   .clink { all: unset; cursor: pointer; font-size: .76rem; color: var(--ink-soft); text-decoration: underline; }
   .credtop { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
   .credtop b { font-size: .86rem; }
+  .cwarn { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; font-size: .78rem; line-height: 1.45; color: var(--ink);
+    background: rgba(235,192,106,.28); border: 1px solid rgba(168,123,39,.35); }
   .clist { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
   .ccard { padding: 14px 16px; border-radius: 18px; background: rgba(255,255,255,.62); border: 1px solid var(--glass-edge); }
   .chead { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -431,7 +433,7 @@
 </aside>
 
 <header>
-  <h1 class="wordmark">Aélythèque</h1>
+  <h1 class="wordmark">Aélysthèque</h1>
   <div class="rule"></div>
   <p>Tous les outils internes Aélys, au même endroit.</p>
 </header>
@@ -485,6 +487,7 @@
   </form>
   <div id="credView" hidden>
     <div class="credtop"><b id="credStore"></b><button class="clink" id="credLock" type="button">Verrouiller</button></div>
+    <p class="cwarn">ℹ️ Si un mot de passe ne fonctionne pas, c’est qu’il a été changé par l’équipe du magasin : je n’ai pas le nouveau mot de passe.</p>
     <input class="libsearch" id="credSearch" type="search" placeholder="Rechercher une appli" autocomplete="off" aria-label="Rechercher une appli" />
     <div class="clist" id="credList"></div>
   </div>

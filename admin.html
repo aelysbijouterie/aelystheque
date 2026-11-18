@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex, nofollow" />
-<title>Aélythèque · Administration</title>
+<title>Aélysthèque · Administration</title>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
 <link rel="preload" href="fonts/playfair-display-61a96359.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="stylesheet" href="fonts/fonts.css" />
@@ -136,7 +136,7 @@
 <body>
 
 <div class="top">
-  <div class="wordmark">Aélythèque<small>administration</small></div>
+  <div class="wordmark">Aélysthèque<small>administration</small></div>
   <div style="display:flex; gap:8px">
     <a class="btn sm" href="index.html">Voir le site</a>
     <button class="btn sm" id="logout" hidden>Déconnexion</button>
@@ -938,7 +938,7 @@
       ['2. Feuille « Identifiants » : une ligne par appli et par magasin.'],
       ['   • Magasin = « Tous » (ou vide) → l’identifiant est commun à tous les magasins.'],
       ['   • Magasin = le nom exact d’un magasin → visible seulement par ce magasin.'],
-      ['3. Si le nom de l’application est celui d’un outil de l’Aélythèque, il est relié automatiquement (icône + bouton Ouvrir).'],
+      ['3. Si le nom de l’application est celui d’un outil de l’Aélysthèque, il est relié automatiquement (icône + bouton Ouvrir).'],
       ['4. Importer ce fichier dans l’admin REMPLACE tous les identifiants actuels (les magasins sont ajoutés / mis à jour).'],
       ['5. Ce fichier contient des mots de passe : ne l’envoie pas par mail, ne le mets pas sur GitHub.']]);
     ws3['!cols'] = [{ wch: 110 }];
@@ -966,7 +966,8 @@
       const shS = sRows.map(r => ({ name: lab(pick(r, ['magasin', 'nom', 'boutique'])), code: pick(r, ['codedacces', 'code', 'motdepasse', 'mdp', 'password', 'acces']) })).filter(x => x.name);
       const codes = new Set();
       const inSheet = new Set(shS.map(x => x.name.trim().toLowerCase()));
-      const used = new Set(stores.filter(x => !inSheet.has(x.name.trim().toLowerCase())).map(x => x.code.trim().toLowerCase()));
+      const sheetCodes = new Set(shS.map(x => x.code.trim().toLowerCase()));
+      const used = new Set(stores.filter(x => !inSheet.has(x.name.trim().toLowerCase()) && !sheetCodes.has(x.code.trim().toLowerCase())).map(x => x.code.trim().toLowerCase()));
       for (const x of shS) {
         if (!x.code) throw new Error(`Le magasin « ${x.name} » n’a pas de code d’accès.`);
         const k = x.code.toLowerCase(); if (codes.has(k) || used.has(k)) throw new Error(`Le code « ${x.code} » est utilisé par deux magasins : chaque magasin doit avoir son propre code.`);
@@ -989,7 +990,7 @@
 
       cMsg('Import en cours…', true);
       for (const x of shS) {
-        const ex = stores.find(y => y.name.trim().toLowerCase() === x.name.trim().toLowerCase());
+        const ex = stores.find(y => y.name.trim().toLowerCase() === x.name.trim().toLowerCase()) || stores.find(y => y.code.trim().toLowerCase() === x.code.trim().toLowerCase());   // sinon retrouvé par son code → simplement renommé
         const { error } = ex ? await sb.from('stores').update({ name: x.name, code: x.code }).eq('id', ex.id) : await sb.from('stores').insert({ name: x.name, code: x.code });
         if (error) throw new Error(`Magasin « ${x.name} » : ${dupMsg(error)}`);
       }
